@@ -1,3 +1,5 @@
+
+// ----- Class: Game ----------------------------------------
 function Game(boardImageUrl, blackStoneImageUrl, whiteStoneImageUrl, boardSize, boardGeometry) {
 	this.boardImageUrl = boardImageUrl ;
 	this.boardImage = document.createElement("IMG") ;
