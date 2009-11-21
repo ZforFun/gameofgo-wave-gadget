@@ -2,7 +2,8 @@
 // ----- Class: Game ----------------------------------------
 // ----------------------------------------------------------
 
-function Game(boardImageUrl, blackStoneImageUrl, whiteStoneImageUrl, boardSize, boardGeometry) {
+function Game(boardImageUrl, blackStoneImageUrl, whiteStoneImageUrl, boardSize, 
+              boardGeometry, stoneGeometry) {
     this.boardImageUrl = boardImageUrl ;
     this.boardImage = document.createElement("IMG") ;
     this.boardImage.src = this.boardImageUrl ;
@@ -12,6 +13,7 @@ function Game(boardImageUrl, blackStoneImageUrl, whiteStoneImageUrl, boardSize, 
     
     this.boardSize = boardSize ;
     this.boardGeometry = boardGeometry ;
+    this.stoneGeometry = stoneGeometry ;
     
     this.gameBoard = new GameBoard(boardSize) ;
     this.gameLog   = new GameLog() ;
@@ -40,8 +42,9 @@ Game.prototype.resetBoard = function(div) {
             var im = document.createElement("IMG") ;
             im.src = this.blackStoneImageUrl ;
             var x, y ;
-            x = Math.round(this.boardGeometry.getXforIndex(i) - im.width/2) ;
-            y = Math.round(this.boardGeometry.getYforIndex(j) - im.height/2) ;
+            
+            x = Math.round(this.boardGeometry.getXforIndex(i) - this.stoneGeometry.width/2) ;
+            y = Math.round(this.boardGeometry.getYforIndex(j) - this.stoneGeometry.height/2) ;
             
             this.stoneImages[i*this.boardSize+j] = im ;
             div.appendChild(im) ;
@@ -49,11 +52,8 @@ Game.prototype.resetBoard = function(div) {
             im.style.visibility = "hidden" ;
             im.style.left = x+"px" ;
             im.style.top = y+"px" ;
-            
-            // console.debug("Adding: "+i+", "+j+" -> "+im.style.left+", "+im.style.top) ;
         }
     }
-    
 }
 
 Game.prototype.registerOnClick = function() {
@@ -125,12 +125,23 @@ Game.prototype.undo = function() {
 	this.renderBoard() ;
 }
 
+Game.prototype.redo = function() {
+	this.gameBoard.redo() ;
+	this.renderBoard() ;
+}
+
+Game.prototype.pass = function() {
+	this.gameBoard.pass() ;
+	this.renderBoard() ;
+}
+
 // ----------------------------------------------------------
 // ----- Class: GameLog -------------------------------------
 // ----------------------------------------------------------
 
 function GameLog() {
     this.log = new Array() ;
+    this.logLength = 0 ;
 }
 
 GameLog.prototype.addStep = function(i, j, color) {
@@ -147,11 +158,29 @@ GameLog.prototype.pass = function() {
 }
 
 GameLog.prototype.undo = function() {
-	this.log.pop() ;
+	var success = false ;
+	if(this.logLength) {
+		this.logLength -= 1 ;
+		success = true ;
+	}
+	
+	return success ;
+}
+
+GameLog.prototype.redo = function() {
+	var rv = null ;
+	if(this.logLength<this.log.length) {
+		rv = this.getStep(this.logLength) ;
+		this.logLength += 1 ;
+	}
+	
+	return rv ;
 }
 
 GameLog.prototype._addStep = function(stone) {
-	this.log[this.log.length] = stone ;
+	this.log.length = this.logLength ;
+	this.log[this.logLength] = stone ;
+	this.logLength = this.log.length ;
 }
 
 GameLog.prototype.getStep = function(index) {
@@ -160,8 +189,8 @@ GameLog.prototype.getStep = function(index) {
 
 GameLog.prototype.lastStep = function() {
     var rv = null ;
-    if(this.log.length>0) {
-        rv = this.log[this.log.length-1] ;
+    if(this.logLength>0) {
+        rv = this.log[this.logLength-1] ;
     }
     return rv ;
 }
@@ -171,14 +200,19 @@ GameLog.prototype.clone = function() {
 	
     if(this.log.length) {
         rv.log = this.log.slice(0) ;
+        rv.logLength = this.logLength ;
     }
     
     return rv ;
 }
 
 GameLog.prototype.getLength = function() {
-    return this.log.length ;
+    return this.logLength ;
 }
+
+// ----------------------------------------------------------
+// ----- Class: GameBoardStone ------------------------------
+// ----------------------------------------------------------
 
 function GameBoardStone(x, y, color) {
     this.x = x ;
@@ -193,8 +227,6 @@ GameBoardStone.newPassStone = function(color) {
 GameBoardStone.prototype.isPass = function() {
 	return this.x == -1 && this.y == -1 ;
 }
-
-
 
 function gameBoardStoneComparator(o1, o2) {
     if(o1.x<o2.x) return -1 ;
@@ -216,11 +248,7 @@ function GameBoard(boardSize) {
 }
 
 GameBoard.prototype.setMove = function (x, y, color) {
-    var field = this.board[x*this.boardSize+y] ;
-
-    // If field is occupied, this is an invalid move...
-    if(field) return false ;
-    
+	var moveAllowed = false ;    
     // Determine the other color and other color
     if(color == null) {
         color = 1 ;
@@ -229,7 +257,21 @@ GameBoard.prototype.setMove = function (x, y, color) {
             color = 2 ;
         }
     }
-    
+
+	moveAllowed = this.tryToApplyStepToBoard(x, y, color);
+
+	if(moveAllowed)
+    	this.gameLog.addStep(x, y, color) ;
+
+	return moveAllowed ;
+}
+
+GameBoard.prototype.tryToApplyStepToBoard = function(x, y, color) {
+    var field = this.board[x*this.boardSize+y] ;
+
+    // If field is occupied, this is an invalid move...
+    if(field) return false ;
+        
     var otherColor = 1;
     if(color == 1) otherColor = 2 ;
     
@@ -266,8 +308,6 @@ GameBoard.prototype.setMove = function (x, y, color) {
 
     if(!moveAllowed) {
         this.board[x*this.boardSize+y] = null ;
-    } else {
-        this.gameLog.addStep(x, y, color) ;
     }
     
     return moveAllowed ;
@@ -362,8 +402,10 @@ GameBoard.prototype.applyLog = function (log) {
 
     for(i=0; i<len; i++) {
         var s = log.getStep(i) ;
-        this.setMove(s.x, s.y, s.color) ;
+        this.tryToApplyStepToBoard(s.x, s.y, s.color) ;
     }
+    
+    this.gameLog = log ;
 }
 
 GameBoard.prototype.reset = function() {
@@ -376,6 +418,13 @@ GameBoard.prototype.undo = function() {
     this.reset() ;
     log.undo() ;
     this.applyLog(log) ;
+}
+
+GameBoard.prototype.redo = function() {
+	var redone = this.gameLog.redo() ;
+	if(redone) {
+		this.tryToApplyStepToBoard(redone.x, redone.y, redone.color) ;
+	}
 }
 
 // ----------------------------------------------------------
@@ -405,6 +454,15 @@ GameBoardGeometry.prototype.getIndexForX = function(x) {
 GameBoardGeometry.prototype.getIndexForY = function(y) {
     var rv = (y - this.firstY) + this.incY/2 ;
     return Math.floor(rv/this.incY) ;
+}
+
+// ----------------------------------------------------------
+// ----- Class: GameStoneGeometry ---------------------------
+// ----------------------------------------------------------
+
+function GameStoneGeometry(width, height) {
+	this.width = width ;
+	this.height = height ;
 }
 
 // ----------------------------------------------------------
