@@ -2,10 +2,13 @@
 <script type="text/javascript" src="js.js"></script>
 <body>
 <img src="undo.png" onclick="game.undo()"/>
+<img src="redo.png" onclick="game.redo()"/>
+<img src="pass.png" onclick="game.pass()"/>
 <div id="main_div" style="position:relative"></div>
 <script>
 var boardGeometry = new GameBoardGeometry(20, 32, 20, 32) ;
-var game = new Game("board.png", "black.png", "white.png", 19, boardGeometry) ;
+var stoneGeometry = new GameStoneGeometry(24, 24) ;
+var game = new Game("board.png", "black.png", "white.png", 19, boardGeometry, stoneGeometry) ;
 game.resetBoard(document.getElementById("main_div")) ;
 game.registerOnClick() ;
 </script>
