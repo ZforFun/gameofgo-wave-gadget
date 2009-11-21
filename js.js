@@ -111,11 +111,19 @@ Game.prototype.onClickOnBoard = function(event) {
     
     i = this.boardGeometry.getIndexForX(x) ;
     j = this.boardGeometry.getIndexForY(y) ;
+    
+    if(i>=this.boardSize || j>=this.boardSize) {
+        return
+    }
 
     this.gameBoard.setMove(i, j) ;
     this.renderBoard() ;
 }
 
+Game.prototype.undo = function() {
+	this.gameBoard.undo() ;
+	this.renderBoard() ;
+}
 
 // ----------------------------------------------------------
 // ----- Class: GameLog -------------------------------------
@@ -126,7 +134,24 @@ function GameLog() {
 }
 
 GameLog.prototype.addStep = function(i, j, color) {
-    this.log[this.log.length] = new GameBoardStone(i, j, color) ;
+    this._addStep(new GameBoardStone(i, j, color)) ;
+}
+
+GameLog.prototype.pass = function() {
+	var lastStep = this.lastStep() ;
+	var color = 1 ;
+	if(lastStep && lastStep.color == 1) {
+		color = 2 ;
+	}
+    this._addStep(GameBoardStone.newPassStone(color)) ;
+}
+
+GameLog.prototype.undo = function() {
+	this.log.pop() ;
+}
+
+GameLog.prototype._addStep = function(stone) {
+	this.log[this.log.length] = stone ;
 }
 
 GameLog.prototype.getStep = function(index) {
@@ -141,6 +166,16 @@ GameLog.prototype.lastStep = function() {
     return rv ;
 }
 
+GameLog.prototype.clone = function() {
+    var rv = new GameLog() ;
+	
+    if(this.log.length) {
+        rv.log = this.log.slice(0) ;
+    }
+    
+    return rv ;
+}
+
 GameLog.prototype.getLength = function() {
     return this.log.length ;
 }
@@ -150,6 +185,16 @@ function GameBoardStone(x, y, color) {
     this.y = y ;
     this.color = color ;
 }
+
+GameBoardStone.newPassStone = function(color) {
+	return new GameBoardStone(-1, -1, color) ;
+}
+
+GameBoardStone.prototype.isPass = function() {
+	return this.x == -1 && this.y == -1 ;
+}
+
+
 
 function gameBoardStoneComparator(o1, o2) {
     if(o1.x<o2.x) return -1 ;
@@ -165,7 +210,7 @@ function gameBoardStoneComparator(o1, o2) {
 // ----------------------------------------------------------
 
 function GameBoard(boardSize) {
-    this.board = Array() ;
+    this.board = new Array() ;
     this.boardSize = boardSize ;
     this.gameLog = new GameLog() ;
 }
@@ -226,6 +271,10 @@ GameBoard.prototype.setMove = function (x, y, color) {
     }
     
     return moveAllowed ;
+}
+
+GameBoard.prototype.pass = function() {
+	this.gameLog.pass() ;
 }
 
 GameBoard.prototype.getNeighbours = function(x, y) {
@@ -315,6 +364,18 @@ GameBoard.prototype.applyLog = function (log) {
         var s = log.getStep(i) ;
         this.setMove(s.x, s.y, s.color) ;
     }
+}
+
+GameBoard.prototype.reset = function() {
+    this.board = new Array() ;
+    this.gameLog = new GameLog() ;
+}
+
+GameBoard.prototype.undo = function() {
+    var log = this.gameLog.clone() ;
+    this.reset() ;
+    log.undo() ;
+    this.applyLog(log) ;
 }
 
 // ----------------------------------------------------------
