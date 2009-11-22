@@ -1,3 +1,12 @@
 #Page to test the Gadget.
 
-<wiki:gadget url="http://people.inf.elte.hu/petike/js/gameofgo-wave-gadget/gameofgo-wave-gadget.xml" width="620" height="620"/>
+Themes work now:
+e.g. enter
+{{{
+http://people.inf.elte.hu/petike/js/gameofgo-wave-gadget/themes/test-theme/
+}}}
+into the input field, and press "Change".
+
+For some reason preferences are not saved...
+
+<wiki:gadget url="http://people.inf.elte.hu/petike/js/gameofgo-wave-gadget/gameofgo-wave-gadget.xml" width="640" height="640"/>
