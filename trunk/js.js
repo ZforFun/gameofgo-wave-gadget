@@ -7,14 +7,14 @@ function Game(div, themeUrl) {
 }
 
 Game.prototype.changeTheme = function (themeUrl) {
-	this.themeManager = new ThemeManager(this, themeUrl) ;
-	this.themeManager.loadTheme() ;
+    this.themeManager = new ThemeManager(this, themeUrl) ;
+    this.themeManager.loadTheme() ;
 }
 
 Game.prototype.initializeAppearance = function(boardImageUrl, 
-											   blackStoneImageUrl, whiteStoneImageUrl,
-											   blackLastStoneImageUrl, whiteLastStoneImageUrl,
-                                    		   boardSize, 
+                                               blackStoneImageUrl, whiteStoneImageUrl,
+                                               blackLastStoneImageUrl, whiteLastStoneImageUrl,
+                                               boardSize, 
                                                boardGeometry, stoneGeometry) {
     if(this.boardSize != boardSize) {
        this.boardSize = boardSize ;
@@ -37,16 +37,16 @@ Game.prototype.initializeAppearance = function(boardImageUrl,
 
 Game.prototype.onThemeChange = function(boardImageUrl, 
                                         blackStoneImageUrl, whiteStoneImageUrl,
-    								    blackLastStoneImageUrl, whiteLastStoneImageUrl,
-									    boardSize, 
-									    boardGeometry, stoneGeometry) {
-	this.initializeAppearance(boardImageUrl, 
-	                          blackStoneImageUrl, whiteStoneImageUrl,
-	                          blackLastStoneImageUrl, whiteLastStoneImageUrl,
-	                          boardSize,
-	                          boardGeometry, stoneGeometry) ;
-	this.resetBoard() ;
-	this.renderBoard() ;
+                                        blackLastStoneImageUrl, whiteLastStoneImageUrl,
+                                        boardSize, 
+                                        boardGeometry, stoneGeometry) {
+    this.initializeAppearance(boardImageUrl, 
+                              blackStoneImageUrl, whiteStoneImageUrl,
+                              blackLastStoneImageUrl, whiteLastStoneImageUrl,
+                              boardSize,
+                              boardGeometry, stoneGeometry) ;
+    this.resetBoard() ;
+    this.renderBoard() ;
 }
 
 Game.prototype.resetBoard = function() {
@@ -163,18 +163,18 @@ Game.prototype.onClickOnBoard = function(event) {
 }
 
 Game.prototype.undo = function() {
-	this.gameBoard.undo() ;
-	this.renderBoard() ;
+    this.gameBoard.undo() ;
+    this.renderBoard() ;
 }
 
 Game.prototype.redo = function() {
-	this.gameBoard.redo() ;
-	this.renderBoard() ;
+    this.gameBoard.redo() ;
+    this.renderBoard() ;
 }
 
 Game.prototype.pass = function() {
-	this.gameBoard.pass() ;
-	this.renderBoard() ;
+    this.gameBoard.pass() ;
+    this.renderBoard() ;
 }
 
 Game.prototype.exportToSGF = function() {
@@ -239,38 +239,38 @@ GameLog.prototype.addStep = function(i, j, color) {
 }
 
 GameLog.prototype.pass = function() {
-	var lastStep = this.lastStep() ;
-	var color = 1 ;
-	if(lastStep && lastStep.color == 1) {
-		color = 2 ;
-	}
+    var lastStep = this.lastStep() ;
+    var color = 1 ;
+    if(lastStep && lastStep.color == 1) {
+        color = 2 ;
+    }
     this._addStep(GameBoardStone.newPassStone(color)) ;
 }
 
 GameLog.prototype.undo = function() {
-	var success = false ;
-	if(this.logLength) {
-		this.logLength -= 1 ;
-		success = true ;
-	}
+    var success = false ;
+    if(this.logLength) {
+        this.logLength -= 1 ;
+        success = true ;
+    }
 
-	return success ;
+    return success ;
 }
 
 GameLog.prototype.redo = function() {
-	var rv = null ;
-	if(this.logLength<this.log.length) {
-		rv = this.getStep(this.logLength) ;
-		this.logLength += 1 ;
-	}
+    var rv = null ;
+    if(this.logLength<this.log.length) {
+        rv = this.getStep(this.logLength) ;
+        this.logLength += 1 ;
+    }
 
-	return rv ;
+    return rv ;
 }
 
 GameLog.prototype._addStep = function(stone) {
-	this.log.length = this.logLength ;
-	this.log[this.logLength] = stone ;
-	this.logLength = this.log.length ;
+    this.log.length = this.logLength ;
+    this.log[this.logLength] = stone ;
+    this.logLength = this.log.length ;
 }
 
 GameLog.prototype.getStep = function(index) {
@@ -320,11 +320,11 @@ function GameBoardStone(x, y, color) {
 }
 
 GameBoardStone.newPassStone = function(color) {
-	return new GameBoardStone(-1, -1, color) ;
+    return new GameBoardStone(-1, -1, color) ;
 }
 
 GameBoardStone.prototype.isPass = function() {
-	return this.x == -1 && this.y == -1 ;
+    return this.x == -1 && this.y == -1 ;
 }
 
 function gameBoardStoneComparator(o1, o2) {
@@ -347,7 +347,7 @@ function GameBoard(boardSize) {
 }
 
 GameBoard.prototype.setMove = function (x, y, color) {
-	var moveAllowed = false ;
+    var moveAllowed = false ;
     // Determine the other color and other color
     if(color == null) {
         color = 1 ;
@@ -357,12 +357,12 @@ GameBoard.prototype.setMove = function (x, y, color) {
         }
     }
 
-	moveAllowed = this.tryToApplyStepToBoard(x, y, color);
+    moveAllowed = this.tryToApplyStepToBoard(x, y, color);
 
-	if(moveAllowed)
-    	this.gameLog.addStep(x, y, color) ;
+    if(moveAllowed)
+        this.gameLog.addStep(x, y, color) ;
 
-	return moveAllowed ;
+    return moveAllowed ;
 }
 
 GameBoard.prototype.tryToApplyStepToBoard = function(x, y, color) {
@@ -413,7 +413,7 @@ GameBoard.prototype.tryToApplyStepToBoard = function(x, y, color) {
 }
 
 GameBoard.prototype.pass = function() {
-	this.gameLog.pass() ;
+    this.gameLog.pass() ;
 }
 
 GameBoard.prototype.getNeighbours = function(x, y) {
@@ -524,10 +524,10 @@ GameBoard.prototype.undo = function() {
 }
 
 GameBoard.prototype.redo = function() {
-	var redone = this.gameLog.redo() ;
-	if(redone) {
-		this.tryToApplyStepToBoard(redone.x, redone.y, redone.color) ;
-	}
+    var redone = this.gameLog.redo() ;
+    if(redone) {
+        this.tryToApplyStepToBoard(redone.x, redone.y, redone.color) ;
+    }
 }
 
 // ----------------------------------------------------------
@@ -564,8 +564,8 @@ GameBoardGeometry.prototype.getIndexForY = function(y) {
 // ----------------------------------------------------------
 
 function GameStoneGeometry(width, height) {
-	this.width = width ;
-	this.height = height ;
+    this.width = width ;
+    this.height = height ;
 }
 
 // ----------------------------------------------------------
@@ -635,143 +635,143 @@ SortedSet.prototype.pop = function() {
 }
 
 function ThemeManager(game, url) {
-	this.game = game ;
-	this.url  = url ;
+    this.game = game ;
+    this.url  = url ;
 }
 
 ThemeManager.prototype.loadTheme = function() {
-	// alert("ThemeManager.loadTheme") ;
+    // alert("ThemeManager.loadTheme") ;
 
-	var self = this ;
-	var params = {} ;
-	var callback = function(obj) {
-		self.onThemeUrlFetched(obj) ;
-	}
-	
-	var fileUrl = this.url + "theme.xml" ;
-	params[gadgets.io.RequestParameters.CONTENT_TYPE] = gadgets.io.ContentType.DOM ;
-	gadgets.io.makeRequest(fileUrl, callback, params) ;
-	
-	// alert("after makeRequest: " + fileUrl + params) ;
+    var self = this ;
+    var params = {} ;
+    var callback = function(obj) {
+        self.onThemeUrlFetched(obj) ;
+    }
+    
+    var fileUrl = this.url + "theme.xml" ;
+    params[gadgets.io.RequestParameters.CONTENT_TYPE] = gadgets.io.ContentType.DOM ;
+    gadgets.io.makeRequest(fileUrl, callback, params) ;
+    
+    // alert("after makeRequest: " + fileUrl + params) ;
 }
 
 ThemeManager.prototype.onThemeUrlFetched = function(obj) {
-	this.boardGeometry = null ;
-	this.boardImageUrl = this.url ;
-	this.blackStoneImageUrl = this.url ;
-	this.whiteStoneImageUrl = this.url ;
-	this.blackLastStoneImageUrl = this.url ;
-	this.whiteLastStoneImageUrl = this.url ;
-	this.boardSize = null ;
-	this.stoneGeometry = null ;
+    this.boardGeometry = null ;
+    this.boardImageUrl = this.url ;
+    this.blackStoneImageUrl = this.url ;
+    this.whiteStoneImageUrl = this.url ;
+    this.blackLastStoneImageUrl = this.url ;
+    this.whiteLastStoneImageUrl = this.url ;
+    this.boardSize = null ;
+    this.stoneGeometry = null ;
 
-	// Get root element
-	var theme = obj.data.getElementsByTagName("theme").item(0) ;
-	
-	// Iterate top level (either board or stone)
-	var themeItems = theme.childNodes ;
-	for(var i=0; i<themeItems.length; i++) {
-		var item = themeItems.item(i) ;
+    // Get root element
+    var theme = obj.data.getElementsByTagName("theme").item(0) ;
+    
+    // Iterate top level (either board or stone)
+    var themeItems = theme.childNodes ;
+    for(var i=0; i<themeItems.length; i++) {
+        var item = themeItems.item(i) ;
 
-		if(item.nodeName == "board") {
-			this.processBoardItem(item) ;
-		}
-		if(item.nodeName == "stone") {
-			this.processStoneItem(item) ;
-		}
-	}
-		
-	this.game.onThemeChange(this.boardImageUrl,
-					this.blackStoneImageUrl,
-					this.whiteStoneImageUrl,
-					this.blackLastStoneImageUrl,
-					this.whiteLastStoneImageUrl,
-					this.boardSize, 
-					this.boardGeometry,
-					this.stoneGeometry) ;
+        if(item.nodeName == "board") {
+            this.processBoardItem(item) ;
+        }
+        if(item.nodeName == "stone") {
+            this.processStoneItem(item) ;
+        }
+    }
+        
+    this.game.onThemeChange(this.boardImageUrl,
+                    this.blackStoneImageUrl,
+                    this.whiteStoneImageUrl,
+                    this.blackLastStoneImageUrl,
+                    this.whiteLastStoneImageUrl,
+                    this.boardSize, 
+                    this.boardGeometry,
+                    this.stoneGeometry) ;
 }
 
 ThemeManager.prototype.processBoardItem = function(board) {
 
     for(var i=0; i<board.childNodes.length; i++) {
-    	var item = board.childNodes.item(i) ;
+        var item = board.childNodes.item(i) ;
 
-    	if(item.nodeName=="size") {
-    		this.boardSize = parseInt(item.firstChild.nodeValue) ;
+        if(item.nodeName=="size") {
+            this.boardSize = parseInt(item.firstChild.nodeValue) ;
         } else if(item.nodeName=="image") {
-        	this.processBoardImageItem(item) ;
+            this.processBoardImageItem(item) ;
         }
     }  
 }
 
 ThemeManager.prototype.processBoardImageItem = function(image) {
-	var lo = 0 ;
-	var to = 0 ;
-	var vg = 1 ;
-	var hg = 1 ;
-	
-	for(var i=0; i<image.childNodes.length; i++) {
-		var item = image.childNodes.item(i) ;
-		if(item.nodeName == "url") {
-			this.boardImageUrl += item.firstChild.nodeValue ;
-		}
-		else if(item.nodeName == "leftOffset") {
-			lo = parseInt(item.firstChild.nodeValue) ;		
-		}
-		else if(item.nodeName == "topOffset") {
-			to = parseInt(item.firstChild.nodeValue) ;		
-		}
-		else if(item.nodeName == "verticalGap") {
-			vg = parseInt(item.firstChild.nodeValue) ;		
-		}
-		else if(item.nodeName == "horizontalGap") {
-			hg = parseInt(item.firstChild.nodeValue) ;		
+    var lo = 0 ;
+    var to = 0 ;
+    var vg = 1 ;
+    var hg = 1 ;
+    
+    for(var i=0; i<image.childNodes.length; i++) {
+        var item = image.childNodes.item(i) ;
+        if(item.nodeName == "url") {
+            this.boardImageUrl += item.firstChild.nodeValue ;
         }
-	}
-	
-	this.boardGeometry = new GameBoardGeometry(lo, hg, to, vg) ;
+        else if(item.nodeName == "leftOffset") {
+            lo = parseInt(item.firstChild.nodeValue) ;        
+        }
+        else if(item.nodeName == "topOffset") {
+            to = parseInt(item.firstChild.nodeValue) ;        
+        }
+        else if(item.nodeName == "verticalGap") {
+            vg = parseInt(item.firstChild.nodeValue) ;        
+        }
+        else if(item.nodeName == "horizontalGap") {
+            hg = parseInt(item.firstChild.nodeValue) ;        
+        }
+    }
+    
+    this.boardGeometry = new GameBoardGeometry(lo, hg, to, vg) ;
 }
 
 ThemeManager.prototype.processStoneItem = function(stone) {
-	var w = 1;
-	var h = 1;
-	
-	for(var i=0; i<stone.childNodes.length; i++) {
-		var item = stone.childNodes.item(i) ;
-		if(item.nodeName == "width") {
-			w = parseInt(item.firstChild.nodeValue) ;
-		} 
-		else if(item.nodeName == "height") {
-			h = parseInt(item.firstChild.nodeValue) ;
-		}
-		else if(item.nodeName == "url") {
-			var typeAttribute = item.getAttribute("type") ;
-			if(typeAttribute=="1") {
-				this.blackStoneImageUrl += item.firstChild.nodeValue ;
-			}
-			if(typeAttribute=="1-last") {
-				this.blackLastStoneImageUrl += item.firstChild.nodeValue ;
-			}
-			else if(typeAttribute=="2"){
-				this.whiteStoneImageUrl += item.firstChild.nodeValue ;
-			}
-			else if(typeAttribute=="2-last"){
-				this.whiteLastStoneImageUrl += item.firstChild.nodeValue ;
-			}
-		}
-	}
-	
-	this.stoneGeometry = new GameStoneGeometry(w, h) ;
+    var w = 1;
+    var h = 1;
+    
+    for(var i=0; i<stone.childNodes.length; i++) {
+        var item = stone.childNodes.item(i) ;
+        if(item.nodeName == "width") {
+            w = parseInt(item.firstChild.nodeValue) ;
+        } 
+        else if(item.nodeName == "height") {
+            h = parseInt(item.firstChild.nodeValue) ;
+        }
+        else if(item.nodeName == "url") {
+            var typeAttribute = item.getAttribute("type") ;
+            if(typeAttribute=="1") {
+                this.blackStoneImageUrl += item.firstChild.nodeValue ;
+            }
+            if(typeAttribute=="1-last") {
+                this.blackLastStoneImageUrl += item.firstChild.nodeValue ;
+            }
+            else if(typeAttribute=="2"){
+                this.whiteStoneImageUrl += item.firstChild.nodeValue ;
+            }
+            else if(typeAttribute=="2-last"){
+                this.whiteLastStoneImageUrl += item.firstChild.nodeValue ;
+            }
+        }
+    }
+    
+    this.stoneGeometry = new GameStoneGeometry(w, h) ;
 }
 
 function DummyThemeManager(game, url) {
-	var prefix = "themes/basic-theme/" ;
-	game.onThemeChange(prefix+"board.png",
-					   prefix+"black.png",
-					   prefix+"white.png",
-					   prefix+"black-last.png",
-					   prefix+"white-last.png",
-					   19,
-					   new GameBoardGeometry(20, 32, 20, 32),
-					   new GameStoneGeometry(24, 24)) ;
+    var prefix = "themes/basic-theme/" ;
+    game.onThemeChange(prefix+"board.png",
+                       prefix+"black.png",
+                       prefix+"white.png",
+                       prefix+"black-last.png",
+                       prefix+"white-last.png",
+                       19,
+                       new GameBoardGeometry(20, 32, 20, 32),
+                       new GameStoneGeometry(24, 24)) ;
 }
