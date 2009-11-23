@@ -3,10 +3,11 @@
 Themes work now:
 e.g. enter
 {{{
-http://people.inf.elte.hu/petike/js/gameofgo-wave-gadget/themes/test-theme/
+http://gameofgo-wave-gadget.googlecode.com/svn/trunk/themes/test-theme/
+http://gameofgo-wave-gadget.googlecode.com/svn/trunk/themes/basic-theme/
 }}}
 into the input field, and press "Change".
 
 For some reason preferences are not saved...
 
-<wiki:gadget url="http://people.inf.elte.hu/petike/js/gameofgo-wave-gadget/gameofgo-wave-gadget.xml" width="640" height="640"/>
+<wiki:gadget url="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/gameofgo-wave-gadget.xml" width="640" height="640"/>
