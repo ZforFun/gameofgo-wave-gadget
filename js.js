@@ -2,13 +2,27 @@
 // ----- Class: Game ----------------------------------------
 // ----------------------------------------------------------
 
-function Game(boardImageUrl, 
-              blackStoneImageUrl, whiteStoneImageUrl,
-              blackLastStoneImageUrl, whiteLastStoneImageUrl,
-              boardSize, boardGeometry, stoneGeometry) {
+function Game(div, themeUrl) {
+    this.div = div ;
+}
+
+Game.prototype.changeTheme = function (themeUrl) {
+	this.themeManager = new ThemeManager(this, themeUrl) ;
+	this.themeManager.loadTheme() ;
+}
+
+Game.prototype.initializeAppearance = function(boardImageUrl, 
+											   blackStoneImageUrl, whiteStoneImageUrl,
+											   blackLastStoneImageUrl, whiteLastStoneImageUrl,
+                                    		   boardSize, 
+                                               boardGeometry, stoneGeometry) {
+    if(this.boardSize != boardSize) {
+       this.boardSize = boardSize ;
+       this.gameBoard = new GameBoard(boardSize) ;
+       this.gameLog   = new GameLog() ;
+    }
+
     this.boardImageUrl = boardImageUrl ;
-    this.boardImage = document.createElement("IMG") ;
-    this.boardImage.src = this.boardImageUrl ;
 
     this.blackStoneImageUrl = blackStoneImageUrl ;
     this.whiteStoneImageUrl = whiteStoneImageUrl ;
@@ -19,14 +33,23 @@ function Game(boardImageUrl,
     this.boardGeometry = boardGeometry ;
     this.stoneGeometry = stoneGeometry ;
 
-    this.gameBoard = new GameBoard(boardSize) ;
-
-// !!Szerintem ez mar nem kell, ha nincs bug, elobb-utobb jol kiszedem!!
-//    this.gameLog   = new GameLog() ;
-
 }
 
-Game.prototype.resetBoard = function(div) {
+Game.prototype.onThemeChange = function(boardImageUrl, 
+                                        blackStoneImageUrl, whiteStoneImageUrl,
+    								    blackLastStoneImageUrl, whiteLastStoneImageUrl,
+									    boardSize, 
+									    boardGeometry, stoneGeometry) {
+	this.initializeAppearance(boardImageUrl, 
+	                          blackStoneImageUrl, whiteStoneImageUrl,
+	                          blackLastStoneImageUrl, whiteLastStoneImageUrl,
+	                          boardSize,
+	                          boardGeometry, stoneGeometry) ;
+	this.resetBoard() ;
+	this.renderBoard() ;
+}
+
+Game.prototype.resetBoard = function() {
     var i, j ;
 
     // Remove stones, and old background...
@@ -38,8 +61,11 @@ Game.prototype.resetBoard = function(div) {
     }
     
     // Save new div, add background
-    this.div = div ;
-    div.appendChild(this.boardImage) ;
+    this.boardImage = document.createElement("IMG") ;
+    this.boardImage.src = this.boardImageUrl ;
+    this.registerOnClick() ;
+
+    this.div.appendChild(this.boardImage) ;
     
     // Add stones
     this.stoneImages = Array() ;
@@ -48,13 +74,14 @@ Game.prototype.resetBoard = function(div) {
         for(j=0; j<this.boardSize; j++) {
             var im = document.createElement("IMG") ;
             im.src = this.blackStoneImageUrl ;
-            var x, y ;
+            var x
+            var y ;
             
             x = Math.round(this.boardGeometry.getXforIndex(i) - this.stoneGeometry.width/2) ;
             y = Math.round(this.boardGeometry.getYforIndex(j) - this.stoneGeometry.height/2) ;
 
             this.stoneImages[i*this.boardSize+j] = im ;
-            div.appendChild(im) ;
+            this.div.appendChild(im) ;
             im.style.position = "absolute" ;
             im.style.visibility = "hidden" ;
             im.style.left = x+"px" ;
@@ -394,31 +421,31 @@ GameBoard.prototype.getNeighbours = function(x, y) {
     
     var xx = x-1
     var yy = y ;
-    var stone = this.getField(xx, yy);
+    var color = this.getField(xx, yy);
     
     if(xx>=0)        
-        rv.insert(new GameBoardStone(xx, yy, stone)) ;
+        rv.insert(new GameBoardStone(xx, yy, color)) ;
 
     var xx = x+1
     var yy = y ;
-    var stone = this.getField(xx, yy);
+    var color = this.getField(xx, yy);
     
     if(xx<this.boardSize)        
-        rv.insert(new GameBoardStone(xx, yy, stone)) ;
+        rv.insert(new GameBoardStone(xx, yy, color)) ;
 
     var xx = x
     var yy = y-1 ;
-    var stone = this.getField(xx, yy);
+    var color = this.getField(xx, yy);
     
     if(yy>=0)        
-        rv.insert(new GameBoardStone(xx, yy, stone)) ;
+        rv.insert(new GameBoardStone(xx, yy, color)) ;
 
     var xx = x
     var yy = y+1 ;
-    var stone = this.getField(xx, yy);
+    var color = this.getField(xx, yy);
     
     if(yy<this.boardSize)        
-        rv.insert(new GameBoardStone(xx, yy, stone)) ;
+        rv.insert(new GameBoardStone(xx, yy, color)) ;
         
     return rv ;
 }
@@ -460,7 +487,7 @@ GameBoard.prototype.walkShape = function(x, y, shape, lives) {
 GameBoard.prototype.removeShape = function (shape) {
     for(var i=0; i<shape.data.length; i++) {
         var stone = shape.data[i] ;
-        this.board[stone.x*this.boardSize+stone.y] = null ;
+        this.board[stone.x*this.boardSize+stone.y] = null ; 
     }
 } 
 
@@ -605,4 +632,146 @@ SortedSet.prototype.isEmpty = function() {
 
 SortedSet.prototype.pop = function() {
     return this.data.pop() ;
+}
+
+function ThemeManager(game, url) {
+	this.game = game ;
+	this.url  = url ;
+}
+
+ThemeManager.prototype.loadTheme = function() {
+	// alert("ThemeManager.loadTheme") ;
+
+	var self = this ;
+	var params = {} ;
+	var callback = function(obj) {
+		self.onThemeUrlFetched(obj) ;
+	}
+	
+	var fileUrl = this.url + "theme.xml" ;
+	params[gadgets.io.RequestParameters.CONTENT_TYPE] = gadgets.io.ContentType.DOM ;
+	gadgets.io.makeRequest(fileUrl, callback, params) ;
+	
+	// alert("after makeRequest: " + fileUrl + params) ;
+}
+
+ThemeManager.prototype.onThemeUrlFetched = function(obj) {
+	this.boardGeometry = null ;
+	this.boardImageUrl = this.url ;
+	this.blackStoneImageUrl = this.url ;
+	this.whiteStoneImageUrl = this.url ;
+	this.blackLastStoneImageUrl = this.url ;
+	this.whiteLastStoneImageUrl = this.url ;
+	this.boardSize = null ;
+	this.stoneGeometry = null ;
+
+	// Get root element
+	var theme = obj.data.getElementsByTagName("theme").item(0) ;
+	
+	// Iterate top level (either board or stone)
+	var themeItems = theme.childNodes ;
+	for(var i=0; i<themeItems.length; i++) {
+		var item = themeItems.item(i) ;
+
+		if(item.nodeName == "board") {
+			this.processBoardItem(item) ;
+		}
+		if(item.nodeName == "stone") {
+			this.processStoneItem(item) ;
+		}
+	}
+		
+	this.game.onThemeChange(this.boardImageUrl,
+					this.blackStoneImageUrl,
+					this.whiteStoneImageUrl,
+					this.blackLastStoneImageUrl,
+					this.whiteLastStoneImageUrl,
+					this.boardSize, 
+					this.boardGeometry,
+					this.stoneGeometry) ;
+}
+
+ThemeManager.prototype.processBoardItem = function(board) {
+
+    for(var i=0; i<board.childNodes.length; i++) {
+    	var item = board.childNodes.item(i) ;
+
+    	if(item.nodeName=="size") {
+    		this.boardSize = parseInt(item.firstChild.nodeValue) ;
+        } else if(item.nodeName=="image") {
+        	this.processBoardImageItem(item) ;
+        }
+    }  
+}
+
+ThemeManager.prototype.processBoardImageItem = function(image) {
+	var lo = 0 ;
+	var to = 0 ;
+	var vg = 1 ;
+	var hg = 1 ;
+	
+	for(var i=0; i<image.childNodes.length; i++) {
+		var item = image.childNodes.item(i) ;
+		if(item.nodeName == "url") {
+			this.boardImageUrl += item.firstChild.nodeValue ;
+		}
+		else if(item.nodeName == "leftOffset") {
+			lo = parseInt(item.firstChild.nodeValue) ;		
+		}
+		else if(item.nodeName == "topOffset") {
+			to = parseInt(item.firstChild.nodeValue) ;		
+		}
+		else if(item.nodeName == "verticalGap") {
+			vg = parseInt(item.firstChild.nodeValue) ;		
+		}
+		else if(item.nodeName == "horizontalGap") {
+			hg = parseInt(item.firstChild.nodeValue) ;		
+        }
+	}
+	
+	this.boardGeometry = new GameBoardGeometry(lo, hg, to, vg) ;
+}
+
+ThemeManager.prototype.processStoneItem = function(stone) {
+	var w = 1;
+	var h = 1;
+	
+	for(var i=0; i<stone.childNodes.length; i++) {
+		var item = stone.childNodes.item(i) ;
+		if(item.nodeName == "width") {
+			w = parseInt(item.firstChild.nodeValue) ;
+		} 
+		else if(item.nodeName == "height") {
+			h = parseInt(item.firstChild.nodeValue) ;
+		}
+		else if(item.nodeName == "url") {
+			var typeAttribute = item.getAttribute("type") ;
+			if(typeAttribute=="1") {
+				this.blackStoneImageUrl += item.firstChild.nodeValue ;
+			}
+			if(typeAttribute=="1-last") {
+				this.blackLastStoneImageUrl += item.firstChild.nodeValue ;
+			}
+			else if(typeAttribute=="2"){
+				this.whiteStoneImageUrl += item.firstChild.nodeValue ;
+			}
+			else if(typeAttribute=="2-last"){
+				this.whiteLastStoneImageUrl += item.firstChild.nodeValue ;
+			}
+		}
+	}
+	
+	this.stoneGeometry = new GameStoneGeometry(w, h) ;
+}
+
+function DummyThemeManager(game, url) {
+	var prefix = "themes/basic-theme/" ;
+	game.onThemeChange(prefix+"board.png",
+					   prefix+"black.png",
+					   prefix+"white.png",
+					   prefix+"black-last.png",
+					   prefix+"white-last.png",
+					   19,
+					   new GameBoardGeometry(20, 32, 20, 32),
+					   new GameStoneGeometry(24, 24)) ;
 }
