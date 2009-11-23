@@ -5,6 +5,7 @@
 <img src="redo.png" onclick="game.redo()"/>
 <img src="pass.png" onclick="game.pass()"/>
 <img src="exp2sgf.png" onclick="alert( game.exportToSGF() );"/>
+<img src="impfrsgf.png" onclick="document.getElementById('divSGF').style.visibility='visible';"/>
 <div id="main_div" style="position:relative"></div>
 <script>
 var boardGeometry = new GameBoardGeometry(20, 32, 20, 32) ;
@@ -13,5 +14,22 @@ var game = new Game("board.png", "black.png", "white.png", "blacklast.png", "whi
 game.resetBoard(document.getElementById("main_div")) ;
 game.registerOnClick() ;
 </script>
+
+<div id="divSGF" style="visibility:hidden; position:absolute; border:solid 3px; left:10px; top:50px; height:280px; width:280px; overflow:hidden; background:lightgray">
+<br><center>
+Copy your SGF here:
+<br>
+<textarea id="txt" rows="10" cols="30"></textarea>
+<br>
+<button type=button onClick="readTA();">Process</button>
+</center>
+</div>
+<script>
+function readTA(){
+  game.importFromSGF( document.getElementById("txt").value );
+  document.getElementById('divSGF').style.visibility='hidden';
+}
+</script>
+
 </body>
 </html>
