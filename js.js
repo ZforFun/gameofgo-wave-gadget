@@ -193,7 +193,9 @@ Game.prototype.exportToSGF = function() {
   return strSGF;
 }
 
-Game.prototype.importFromSGF = function() {
+Game.prototype.importFromSGF = function(strSGF) {
+  alert("Under Construction...\n"+strSGF);
+//TODO
 }
 
 // ----------------------------------------------------------
