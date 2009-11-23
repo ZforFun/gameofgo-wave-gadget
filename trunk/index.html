@@ -1,18 +1,21 @@
 <html>
 <script type="text/javascript" src="js.js"></script>
 <body>
-<img src="undo.png" onclick="game.undo()"/>
-<img src="redo.png" onclick="game.redo()"/>
-<img src="pass.png" onclick="game.pass()"/>
-<img src="exp2sgf.png" onclick="alert( game.exportToSGF() );"/>
-<img src="impfrsgf.png" onclick="document.getElementById('divSGF').style.visibility='visible';"/>
-<div id="main_div" style="position:relative"></div>
+       <div id="main_div" style="position:relative"> 
+         <table>
+           <tr id="settings">
+             <td><a href="" onclick="game.undo();return false;">Undo</a></td>
+             <td><a href="" onclick="game.redo();return false;">Redo</a></td>
+             <td><a href="" onclick="game.pass();return false;">Pass</a></td>
+             <td><a href="" onclick="alert( game.exportToSGF() ); return false;">Export to SGF</a></td>
+             <td><a href="" onclick="document.getElementById('divSGF').style.visibility='visible';return false;">Import from SGF</a></td>
+           </tr>
+         </table>
+         <div id="board_div" style="position:relative"/>
+       </div>
 <script>
-var boardGeometry = new GameBoardGeometry(20, 32, 20, 32) ;
-var stoneGeometry = new GameStoneGeometry(24, 24) ;
-var game = new Game("board.png", "black.png", "white.png", "blacklast.png", "whitelast.png", 19, boardGeometry, stoneGeometry) ;
-game.resetBoard(document.getElementById("main_div")) ;
-game.registerOnClick() ;
+var game = new Game(document.getElementById("board_div")) ;
+DummyThemeManager(game) ;
 </script>
 
 <div id="divSGF" style="visibility:hidden; position:absolute; border:solid 3px; left:10px; top:50px; height:280px; width:280px; overflow:hidden; background:lightgray">
