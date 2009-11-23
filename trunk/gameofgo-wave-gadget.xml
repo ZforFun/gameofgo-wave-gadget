@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Module>
+  <ModulePrefs title="Game of Go Gadget" scrolling="true"> 
+    <Require feature="setprefs" />
+  </ModulePrefs>
+  <UserPref name="themeUrl" 
+            display_name="Theme Url" 
+            default_value="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/themes/basic-theme/"/>
+  <Content type="html">
+     <![CDATA[
+       <script type="text/javascript" src="http://people.inf.elte.hu/petike/js/gameofgo-wave-gadget/js.js"></script>
+       <div id="main_div" style="position:relative">
+         <table>
+           <tr id="settings">
+             <td><a href="" onclick="game.undo();return false;">Undo</a></td>
+             <td><a href="" onclick="game.redo();return false;">Redo</a></td>
+             <td><a href="" onclick="game.pass();return false;">Pass</a></td>
+             <td><input type="text" id="themeUrl"/></td>
+             <td><a href="" onclick="changeTheme();return false;">Change</a></td>
+           </tr>
+         </table>
+         <div id="board_div" style="position:relative"/>
+       </div>
+       <script type="text/javascript">
+         var prefs = new gadgets.Prefs();
+         var themeUrl = prefs.getString('themeUrl') ;
+         var game = new Game(document.getElementById("board_div"), themeUrl) ;
+         if(!themeUrl) {
+           themeUrl = "http://gameofgo-wave-gadget.googlecode.com/svn/trunk/themes/basic-theme/" ;
+         }
+         var themeManager = new ThemeManager(game, themeUrl) ;
+         themeManager.loadTheme() ;
+         function changeTheme() {
+            var themeUrl = document.getElementById('themeUrl').value ;
+            prefs.set('themeUrl', themeUrl) ;
+            game.changeTheme(themeUrl);
+         }
+       </script>
+     ]]>
+  </Content>
+</Module>
