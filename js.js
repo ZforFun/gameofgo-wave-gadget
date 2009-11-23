@@ -2,26 +2,33 @@
 // ----- Class: Game ----------------------------------------
 // ----------------------------------------------------------
 
-function Game(boardImageUrl, blackStoneImageUrl, whiteStoneImageUrl, boardSize, 
-              boardGeometry, stoneGeometry) {
+function Game(boardImageUrl, 
+              blackStoneImageUrl, whiteStoneImageUrl,
+              blackLastStoneImageUrl, whiteLastStoneImageUrl,
+              boardSize, boardGeometry, stoneGeometry) {
     this.boardImageUrl = boardImageUrl ;
     this.boardImage = document.createElement("IMG") ;
     this.boardImage.src = this.boardImageUrl ;
-    
+
     this.blackStoneImageUrl = blackStoneImageUrl ;
     this.whiteStoneImageUrl = whiteStoneImageUrl ;
-    
+    this.blackLastStoneImageUrl = blackLastStoneImageUrl ;
+    this.whiteLastStoneImageUrl = whiteLastStoneImageUrl ;
+
     this.boardSize = boardSize ;
     this.boardGeometry = boardGeometry ;
     this.stoneGeometry = stoneGeometry ;
-    
+
     this.gameBoard = new GameBoard(boardSize) ;
-    this.gameLog   = new GameLog() ;
+
+// !!Szerintem ez mar nem kell, ha nincs bug, elobb-utobb jol kiszedem!!
+//    this.gameLog   = new GameLog() ;
+
 }
 
 Game.prototype.resetBoard = function(div) {
     var i, j ;
-    
+
     // Remove stones, and old background...
     if(this.div && this.stoneImages && this.stoneImages.length>0) {
         for(i=0; i<this.stoneImages.length; i++) {
@@ -45,7 +52,7 @@ Game.prototype.resetBoard = function(div) {
             
             x = Math.round(this.boardGeometry.getXforIndex(i) - this.stoneGeometry.width/2) ;
             y = Math.round(this.boardGeometry.getYforIndex(j) - this.stoneGeometry.height/2) ;
-            
+
             this.stoneImages[i*this.boardSize+j] = im ;
             div.appendChild(im) ;
             im.style.position = "absolute" ;
@@ -68,22 +75,30 @@ Game.prototype.renderBoard = function() {
     for(i=0 ; i<this.boardSize; i++) {
         for(j=0; j<this.boardSize; j++) {
             var color = this.gameBoard.getField(i, j) ;
-
-            this.setStone(i, j, color) ;
+            var last  = this.gameBoard.isLast(i, j) ;
+            this.setStone(i, j, color, last) ;
         }
     }
 }
 
-Game.prototype.setStone = function(i, j, color) {
+Game.prototype.setStone = function(i, j, color, last) {
     var x, y ;
     var visibility ;
     var im = this.stoneImages[i*this.boardSize+j] ;
-    
+
     if(color) {
         if(color == 1) {
-            im.src = this.blackStoneImageUrl ;
+            if (!last) {
+              im.src = this.blackStoneImageUrl ;
+            } else {
+              im.src = this.blackLastStoneImageUrl ;
+            }
         } else {
-            im.src = this.whiteStoneImageUrl ;
+            if (!last) {
+              im.src = this.whiteStoneImageUrl ;
+            } else {
+              im.src = this.whiteLastStoneImageUrl ;
+            }
         }
         visibility = "visible" ;
     } else {
@@ -94,7 +109,7 @@ Game.prototype.setStone = function(i, j, color) {
 
 Game.prototype.onClickOnBoard = function(event) {
     var x, y ;
-    
+
     if(event.offsetX) {
         x = event.offsetX ;
     } else {
@@ -135,6 +150,52 @@ Game.prototype.pass = function() {
 	this.renderBoard() ;
 }
 
+Game.prototype.exportToSGF = function() {
+  var currDate = new Date();
+  var year;
+  var month;
+  var day;
+  var hour;
+  var minute;
+  var i;
+  var strSGF = "(\n";
+
+  year = currDate.getFullYear();
+  if (currDate.getMonth()+1 < 10) month  = "0"+(currDate.getMonth()+1); else month  = (currDate.getMonth()+1);
+  if (currDate.getDate()    < 10) day    = "0"+currDate.getDate();      else day    = currDate.getDate();
+  if (currDate.getHours()   < 10) hour   = "0"+currDate.getHours();     else hour   = currDate.getHours();
+  if (currDate.getMinutes() < 10) minute = "0"+currDate.getMinutes();   else minute = currDate.getMinutes();
+
+/////////////////////////////////
+//First Node with general infoes
+  strSGF+=";GM[1]"; //Game = GO
+  strSGF+="FF[4]"; //SGF 4.0
+  strSGF+="RU[Japanese]"; //Japanese rules
+  strSGF+="SZ["+this.boardSize+"]"; //Board size: 19x19
+  strSGF+="PB[Black]"; //Black's name          //TODO: Getting name for black from Wave
+  strSGF+="PW[White]"; //White's name          //TODO: Getting name for white from Wave
+  strSGF+="DT["+year+"-"+month+"-"+day+"]"; //Date
+  strSGF+="TM["+hour+minute+"]"; //Time
+
+////////////////////////////////////
+// Adding the moves from the gameLog
+  for(i=0;i<this.gameBoard.gameLog.getLength();i++){
+    var stone;
+    strSGF+="\n;";
+    stone = this.gameBoard.gameLog.getStep(i);
+    if (stone.color==1) strSGF+="B["; else strSGF+="W[";
+    strSGF+=String.fromCharCode(97+stone.x);
+    strSGF+=String.fromCharCode(97+stone.y);
+    strSGF+="]";
+  }
+
+  strSGF += "\n)";
+  return strSGF;
+}
+
+Game.prototype.importFromSGF = function() {
+}
+
 // ----------------------------------------------------------
 // ----- Class: GameLog -------------------------------------
 // ----------------------------------------------------------
@@ -163,7 +224,7 @@ GameLog.prototype.undo = function() {
 		this.logLength -= 1 ;
 		success = true ;
 	}
-	
+
 	return success ;
 }
 
@@ -173,7 +234,7 @@ GameLog.prototype.redo = function() {
 		rv = this.getStep(this.logLength) ;
 		this.logLength += 1 ;
 	}
-	
+
 	return rv ;
 }
 
@@ -195,14 +256,23 @@ GameLog.prototype.lastStep = function() {
     return rv ;
 }
 
+GameLog.prototype.isLast = function(x, y){
+  var lastStep = this.lastStep();
+  if (!lastStep) {
+    return false;
+  } else {
+    if (lastStep.x==x && lastStep.y==y) return true; else return false;
+  }
+}
+
 GameLog.prototype.clone = function() {
     var rv = new GameLog() ;
-	
+
     if(this.log.length) {
         rv.log = this.log.slice(0) ;
         rv.logLength = this.logLength ;
     }
-    
+
     return rv ;
 }
 
@@ -248,7 +318,7 @@ function GameBoard(boardSize) {
 }
 
 GameBoard.prototype.setMove = function (x, y, color) {
-	var moveAllowed = false ;    
+	var moveAllowed = false ;
     // Determine the other color and other color
     if(color == null) {
         color = 1 ;
@@ -394,6 +464,10 @@ GameBoard.prototype.removeShape = function (shape) {
 
 GameBoard.prototype.getField = function (x, y) {
     return this.board[x*this.boardSize+y] ;
+}
+
+GameBoard.prototype.isLast = function (x, y) {
+    return this.gameLog.isLast(x, y);
 }
 
 GameBoard.prototype.applyLog = function (log) {
