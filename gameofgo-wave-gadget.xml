@@ -6,7 +6,7 @@
   <UserPref name="themeUrl" 
             display_name="Theme Url" 
             default_value="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/themes/basic-theme/"/>
-  <Content type="html">
+  <Content type="html" view="canvas,profile,home">
     <![CDATA[
       <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/js.js"></script>
       <div id="main_div" style="position:relative">
