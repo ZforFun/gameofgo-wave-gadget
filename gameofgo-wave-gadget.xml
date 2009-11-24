@@ -3,6 +3,7 @@
   <ModulePrefs title="Game of Go Gadget" scrolling="true"> 
     <Require feature="setprefs" />
     <Require feature="views" />
+    <Require feature="dynamic-height" />
   </ModulePrefs>
   <UserPref name="themeUrl"
             display_name="Theme Url"
