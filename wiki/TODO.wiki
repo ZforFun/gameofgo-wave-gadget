@@ -1,0 +1,19 @@
+#summary One-sentence summary of this page.
+#labels Phase-Requirements
+
+= Introduction =
+
+This is a simple TODO list.
+If a point is done, move it under the "Done" list
+
+= Details =
+
+To Do:
+
+  * Implement a simple KO-rule 
+  * Implement the SGF-parser (in a simple way for the time being)
+  * Counting mode (with signing stones as dead)
+
+Done:
+
+  * Nothing
