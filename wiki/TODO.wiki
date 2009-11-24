@@ -4,7 +4,7 @@
 = Introduction =
 
 This is a simple TODO list.
-If a point is done, move it under the "Done" list
+If a point is done, move it into the "Done" list
 
 = Details =
 
