@@ -132,6 +132,7 @@ Game.prototype.setStone = function(i, j, color, last) {
         visibility = "hidden" ;
     }
     im.style.visibility = visibility ;
+    
 }
 
 Game.prototype.onClickOnBoard = function(event) {
@@ -155,7 +156,7 @@ Game.prototype.onClickOnBoard = function(event) {
     j = this.boardGeometry.getIndexForY(y) ;
     
     if(i>=this.boardSize || j>=this.boardSize) {
-        return
+        return ;
     }
 
     this.gameBoard.setMove(i, j) ;
@@ -225,6 +226,29 @@ Game.prototype.importFromSGF = function(strSGF) {
 //TODO
 }
 
+Game.prototype.saveStateToWave = function() {
+    if(!wave) return ;
+    
+    var saved = this.gameBoard.toSource() ;
+        
+    wave.getState().submitDelta({'gameBoard': saved}) ;
+}
+
+Game.prototype.restoreStateFromWave = function() {
+    if(!wave) return ;
+    
+    var saved = wave.getState().get('gameBoard') ;
+    if(!saved) return ;
+
+    var arr = null ;
+    eval("arr = "+saved) ;
+    
+    this.gameBoard = GameBoard.restoreFromUnstructuredData(arr) ;
+}
+
+Game.prototype.restoreState
+
+
 // ----------------------------------------------------------
 // ----- Class: GameLog -------------------------------------
 // ----------------------------------------------------------
@@ -232,6 +256,17 @@ Game.prototype.importFromSGF = function(strSGF) {
 function GameLog() {
     this.log = new Array() ;
     this.logLength = 0 ;
+}
+
+GameLog.restoreFromUnstructuredData = function(data) {
+    var rv = new GameLog() ;
+    rv.logLength = data.logLength ;
+    
+    for(var i=0; i<data.log.length; i++) {
+        rv.log[i] = new GameBoardStone(data.log[i].x, data.log[i].y, data.log[i].color) ;
+    }
+    
+    return rv ;
 }
 
 GameLog.prototype.addStep = function(i, j, color) {
@@ -344,6 +379,19 @@ function GameBoard(boardSize) {
     this.board = new Array() ;
     this.boardSize = boardSize ;
     this.gameLog = new GameLog() ;
+}
+
+GameBoard.restoreFromUnstructuredData = function(data) {
+    var rv = new GameBoard(0) ;
+    rv.board = data.board ;
+    rv.boardSize = data.boardSize ;
+    rv.gameLog = GameLog.restoreFromUnstructuredData(data.gameLog) ;
+
+    return rv ;
+}
+
+GameBoard.prototype.serializeToString = function() {
+    return this.toSource()
 }
 
 GameBoard.prototype.setMove = function (x, y, color) {

@@ -7,38 +7,38 @@
             display_name="Theme Url" 
             default_value="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/themes/basic-theme/"/>
   <Content type="html">
-     <![CDATA[
-       <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/js.js"></script>
-       <div id="main_div" style="position:relative">
-         <table>
-           <tr id="settings">
-             <td><a href="" onclick="game.undo();return false;">Undo</a></td>
-             <td><a href="" onclick="game.redo();return false;">Redo</a></td>
-             <td><a href="" onclick="game.pass();return false;">Pass</a></td>
-             <td><input type="text" id="themeUrl"/></td>
-             <td><a href="" onclick="changeTheme();return false;">Change</a></td>
-             <td><a href="" onclick="alert( game.exportToSGF() ); return false;">Export to SGF</a></td>
-             <td><a href="" onclick="document.getElementById('divSGF').style.visibility='visible';return false;">Import from SGF</a></td>
-           </tr>
-         </table>
-         <div id="board_div" style="position:relative"/>
-       </div>
-       <script type="text/javascript">
-         var prefs = new gadgets.Prefs();
-         var themeUrl = prefs.getString('themeUrl') ;
-         var game = new Game(document.getElementById("board_div"), themeUrl) ;
-         if(!themeUrl) {
-           themeUrl = "http://gameofgo-wave-gadget.googlecode.com/svn/trunk/themes/basic-theme/" ;
-         }
-         var themeManager = new ThemeManager(game, themeUrl) ;
-         themeManager.loadTheme() ;
-         function changeTheme() {
-            var themeUrl = document.getElementById('themeUrl').value ;
-            prefs.set('themeUrl', themeUrl) ;
-            game.changeTheme(themeUrl);
-         }
-       </script>
-       
+    <![CDATA[
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/js.js"></script>
+      <div id="main_div" style="position:relative">
+        <table>
+          <tr id="settings">
+            <td><a href="" onclick="game.undo();return false;">Undo</a></td>
+            <td><a href="" onclick="game.redo();return false;">Redo</a></td>
+            <td><a href="" onclick="game.pass();return false;">Pass</a></td>
+            <td><input type="text" id="themeUrl"/></td>
+            <td><a href="" onclick="changeTheme();return false;">Change</a></td>
+            <td><a href="" onclick="alert( game.exportToSGF() ); return false;">Export to SGF</a></td>
+            <td><a href="" onclick="document.getElementById('divSGF').style.visibility='visible';return false;">Import from SGF</a></td>
+          </tr>
+        </table>
+        <div id="board_div" style="position:relative"/>
+      </div>
+      <script type="text/javascript">
+        var prefs = new gadgets.Prefs();
+        var themeUrl = prefs.getString('themeUrl') ;
+        var game = new Game(document.getElementById("board_div"), themeUrl) ;
+        if(!themeUrl) {
+          themeUrl = "http://gameofgo-wave-gadget.googlecode.com/svn/trunk/themes/basic-theme/" ;
+        }
+        var themeManager = new ThemeManager(game, themeUrl) ;
+        themeManager.loadTheme() ;
+        function changeTheme() {
+           var themeUrl = document.getElementById('themeUrl').value ;
+           prefs.set('themeUrl', themeUrl) ;
+           game.changeTheme(themeUrl);
+        }
+      </script>
+      
 <div id="divSGF" style="visibility:hidden; position:absolute; border:solid 3px; left:10px; top:50px; height:280px; width:280px; overflow:hidden; background:lightgray">
 <br><center>
 Copy your SGF here:
