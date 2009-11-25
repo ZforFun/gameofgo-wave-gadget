@@ -11,9 +11,11 @@ If a point is done, move it into the "Done" list
 To Do:
 
   * Implement a simple KO-rule 
-  * Implement the SGF-parser (in a simple way for the time being)
   * Counting mode (with signing stones as dead)
+  * Button First (Instead of Undo-ing to the beginning)
+  * Button Last (Instead of Redo-ing to the end)
+  * Multiple Redo is not smooth on highly filled board 
 
 Done:
 
-  * Nothing
+  * Implement the SGF-parser (in a simple way for the time being)
