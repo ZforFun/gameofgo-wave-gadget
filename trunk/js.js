@@ -222,8 +222,9 @@ Game.prototype.exportToSGF = function() {
 }
 
 Game.prototype.importFromSGF = function(strSGF) {
-  alert("Under Construction...\n"+strSGF);
-//TODO
+  var parser = new SGFParser(strSGF,this);
+  parser.parse();
+  this.renderBoard();
 }
 
 Game.prototype.saveStateToWave = function() {
@@ -460,7 +461,8 @@ GameBoard.prototype.tryToApplyStepToBoard = function(x, y, color) {
     return moveAllowed ;
 }
 
-GameBoard.prototype.pass = function() {
+GameBoard.prototype.pass = function(color) {
+//TODO: Using color in a similar way as in the method setMove
     this.gameLog.pass() ;
 }
 
@@ -823,3 +825,118 @@ function DummyThemeManager(game, url) {
                        new GameBoardGeometry(20, 32, 20, 32),
                        new GameStoneGeometry(24, 24)) ;
 }
+
+function SGFParser(str, game) {
+    this.str   = str;
+    this.game  = game;
+    this.propertyName  = "";
+    this.propertyValue = "";
+}
+
+SGFParser.prototype.parse = function() {
+  this.game.resetBoard();
+  if (!this.consumeWhiteSpaces()) {
+    alert("Unexpected end of file");
+    return;
+  }
+  if (this.str.charAt(0)!='('){
+    alert("Non-expected character: '"+this.str.charAt(0)+"'. Expected: '('");
+    return;
+  }
+  this.str = this.str.slice(1);
+
+  while(this.parseProperty()){
+    if (this.propertyName=="B"){
+      if (this.propertyValue.length==0) {
+        this.game.gameBoard.pass(1);
+      } else if (this.propertyValue.length!=2) {
+        alert("Non-expected property-value: '"+this.propertyValue+"'.");
+        return;
+      } else {
+        var i=this.propertyValue.charCodeAt(0)-97;
+        var j=this.propertyValue.charCodeAt(1)-97;
+        if (i>19 || j>19 || i<0 || j<0) {
+          alert("Non-expected property-value: '"+this.propertyValue+"'.");
+          return;
+        }
+        this.game.gameBoard.setMove(i,j,1);
+      }
+
+    } else if (this.propertyName=="W"){
+       if (this.propertyValue.length==0) {
+        this.game.gameBoard.pass(2);
+      } else if (this.propertyValue.length!=2) {
+        alert("Non-expected property-value: '"+this.propertyValue+"'.");
+        return;
+      } else {
+        var i=this.propertyValue.charCodeAt(0)-97;
+        var j=this.propertyValue.charCodeAt(1)-97;
+        if (i>19 || j>19 || i<0 || j<0) {
+          alert("Non-expected property-value: '"+this.propertyValue+"'.");
+          return;
+        }
+        this.game.gameBoard.setMove(i,j,2);
+      }
+    }
+  }
+}
+
+SGFParser.prototype.parseProperty = function(){
+  var ok = true;
+  ok = this.consumeWhiteSpaces();
+  while(ok){
+    if (this.str.charAt(0)=='(') {
+      this.str = this.str.slice(1);
+    } else if (this.str.charAt(0)==';') {
+      this.str = this.str.slice(1);
+    } else if (this.str.charAt(0)==')') {
+      ok = false;
+      break;
+    } else {
+      ok = this.parsePropertyName();
+      if (!ok) break;
+      ok = this.consumeWhiteSpaces();
+      if (!ok) break;
+      ok = this.parsePropertyValue();
+      break;
+    }
+    ok = this.consumeWhiteSpaces();
+  }
+  return ok;
+}
+
+SGFParser.prototype.parsePropertyName = function(){
+  this.propertyName = "";
+  while(this.str.length>0 && this.str.charAt(0)!='['){
+    this.propertyName+=this.str.charAt(0);
+    this.str = this.str.slice(1);
+  }
+  if (this.str.length==0) {
+    return false;
+  } else { //str[0]=='['
+    this.str = this.str.slice(1);
+    return true;
+  }
+}
+
+SGFParser.prototype.parsePropertyValue = function(){
+  this.propertyValue = "";
+  while(this.str.length>0 && this.str.charAt(0)!=']'){
+    this.propertyValue+=this.str.charAt(0);
+    this.str = this.str.slice(1);
+  }
+  if (this.str.length==0) {
+    return false;
+  } else { //str[0]==']'
+    this.str = this.str.slice(1);
+    return true;
+  }
+}
+
+SGFParser.prototype.consumeWhiteSpaces = function(){
+  while (this.str.length>0 && (this.str.charAt(0)==" " || this.str.charAt(0)=="\n" || this.str.charAt(0)=="\t")) {
+    this.str = this.str.slice(1);
+  }
+  return this.str.length>0;
+}
+
