@@ -47,6 +47,7 @@ Game.prototype.onThemeChange = function(boardImageUrl,
                               boardGeometry, stoneGeometry) ;
     this.resetBoard() ;
     this.renderBoard() ;
+    gadgets.window.adjustHeight();
 }
 
 Game.prototype.resetBoard = function() {
@@ -730,7 +731,7 @@ ThemeManager.prototype.onThemeUrlFetched = function(obj) {
             this.processStoneItem(item) ;
         }
     }
-        
+
     this.game.onThemeChange(this.boardImageUrl,
                     this.blackStoneImageUrl,
                     this.whiteStoneImageUrl,
