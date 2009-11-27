@@ -1,4 +1,5 @@
 #summary An example sgf to copy.
+{{{
 (;
 KM[6.5]
 EV[57th Oza title match 3]
@@ -34,3 +35,4 @@ PB[Yamada Kimio]
 ;B[oi];W[nf];B[li];W[pj];B[di];W[dj];B[fj];W[fk];B[al];W[ak];B[aj]
 ;W[bk];B[cn];W[ja];B[la];W[ra];B[sb];W[oh];B[en];W[em];B[ap];W[aq]
 ;B[od];W[oe];B[mk];W[ba];B[gn])
+}}}
