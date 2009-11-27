@@ -107,6 +107,7 @@ Game.prototype.renderBoard = function() {
         }
     }
     gadgets.window.adjustHeight(400);
+    alert("hihihi");
 }
 
 Game.prototype.setStone = function(i, j, color, last) {
