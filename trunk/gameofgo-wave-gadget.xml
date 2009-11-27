@@ -2,13 +2,19 @@
 <Module>
   <ModulePrefs title="Game of Go Gadget" scrolling="true"> 
     <Require feature="setprefs" />
+<!--
     <Require feature="views" />
+-->
     <Require feature="dynamic-height" />
+    <Require feature="wave" />
   </ModulePrefs>
   <UserPref name="themeUrl"
             display_name="Theme Url"
             default_value="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/themes/basic-theme/"/>
+<!--
   <Content type="html" view="canvas,home">
+-->
+  <Content type="html">
     <![CDATA[
       <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/js.js"></script>
       <div id="main_div" style="position:relative">
