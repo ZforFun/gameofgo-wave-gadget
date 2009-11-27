@@ -64,8 +64,7 @@ Game.prototype.resetBoard = function() {
     this.boardImage = document.createElement("IMG") ;
     this.boardImage.onload = function() {
       gadgets.window.adjustHeight();
-      alert("xxx01");
-    } ;
+    };
     this.boardImage.src = this.boardImageUrl ;
     this.registerOnClick() ;
 
