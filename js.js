@@ -106,8 +106,6 @@ Game.prototype.renderBoard = function() {
             this.setStone(i, j, color, last) ;
         }
     }
-    gadgets.window.adjustHeight();
-    alert("xxx01");
 }
 
 Game.prototype.setStone = function(i, j, color, last) {
