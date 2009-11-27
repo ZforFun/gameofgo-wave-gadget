@@ -5,8 +5,8 @@
 <!--
     <Require feature="views" />
 -->
-    <Require feature="dynamic-height" />
     <Require feature="wave" />
+    <Require feature="dynamic-height" />
   </ModulePrefs>
   <UserPref name="themeUrl"
             display_name="Theme Url"
@@ -51,6 +51,8 @@
 //            wave.setStateCallback(stateUpdated);
           }
         }
+
+        gadgets.window.adjustHeight();
 
         gadgets.util.registerOnLoadHandler(init);
       </script>
