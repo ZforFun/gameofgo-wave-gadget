@@ -46,8 +46,6 @@
           }
         }
 
-        gadgets.window.adjustHeight();
-
         gadgets.util.registerOnLoadHandler(init);
       </script>
 
