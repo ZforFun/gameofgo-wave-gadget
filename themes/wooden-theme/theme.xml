@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <theme>
   <name>Wooden Board</name>
-  <board>
+  <board>  
     <size>19</size>
     <image>
       <url>board.png</url>
