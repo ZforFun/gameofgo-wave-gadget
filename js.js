@@ -152,7 +152,9 @@ Game.prototype.onClickOnBoard = function(event) {
     } else {
         y = event.pageY - this.div.offsetTop ;
     }
-    
+
+alert(''+x+','+y);
+
     var i, j ;
     
     i = this.boardGeometry.getIndexForX(x) ;
