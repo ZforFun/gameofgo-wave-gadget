@@ -21,7 +21,7 @@ WHITE_STONE_COLOR="#EBEBEB"
 
 # Create the stones
 STONE_IMAGE_SIZE="$STONE_SIZE"x"$STONE_SIZE"
-DRAW_COMMAND="circle $((STONE_SIZE / 2)),$((STONE_SIZE / 2)) $((STONE_SIZE / 2)),1"
+DRAW_COMMAND="circle $((STONE_SIZE / 2)),$((STONE_SIZE / 2)) $((STONE_SIZE / 2)),0.5"
 # DRAW_COMMAND="circle 0,0 $STONE_SIZE,$STONE_SIZE"
 convert  -size "$STONE_IMAGE_SIZE" xc:none -fill "$BLACK_STONE_COLOR" -draw "$DRAW_COMMAND"  \
          "$BLACK_STONE_FILENAME"
