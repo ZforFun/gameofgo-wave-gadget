@@ -56,19 +56,27 @@ Game.prototype.resetBoardUI = function() {
     var i, j ;
 
     // Remove stones, and old background...
-    if(this.div && this.stoneImages && this.stoneImages.length>0) {
-        for(i=0; i<this.stoneImages.length; i++) {
-            this.div.removeChild(this.stoneImages[i]) ;
+    if(this.div) {
+        if(this.stoneImages && this.stoneImages.length>0) {
+            for(i=0; i<this.stoneImages.length; i++) {
+                this.div.removeChild(this.stoneImages[i]) ;
+            }
         }
-        this.div.removeChild(this.boardImage) ;
+        if(this.boardImage) {
+            this.div.removeChild(this.boardImage) ;
+        }
+        
+        if(this.waitAnimationDiv) {
+            this.div.removeChild(this.waitAnimationDiv) ;
+            this.waitAnimationDiv = null ;
+        }
     }
     
     // Save new div, add background
     this.boardImage = document.createElement("IMG") ;
     this.boardImage.onload = function() {
-        if(gadgets) {
-             gadgets.window.adjustHeight();
-        }
+        if(typeof gadgets == 'undefined') { return ; }
+        gadgets.window.adjustHeight();
     };
     this.boardImage.src = this.boardImageUrl ;
     this.registerOnClick() ;
@@ -170,7 +178,13 @@ Game.prototype.onClickOnBoard = function(event) {
     }
 
     this.gameBoard.makeMove(i, j) ;
-    this.renderBoard() ;
+    
+    if(this.isInWave()) {
+        this.saveStateToWave() ;
+        this.setWaitAnimation(true) ;
+    } else {
+        this.renderBoard() ;
+    }
 }
 
 Game.prototype.undo = function() {
@@ -186,6 +200,19 @@ Game.prototype.redo = function() {
 Game.prototype.pass = function() {
     this.gameBoard.pass() ;
     this.renderBoard() ;
+}
+
+Game.prototype.gotoStep = function(i) {
+    this.gameBoard.gotoStep(i) ;
+    this.renderBoard() ;
+}
+
+Game.prototype.gotoFirstStep = function () {
+    this.gotoStep(0) ;
+}
+
+Game.prototype.gotoLastStep = function () {
+    this.gotoStep(this.gameBoard.getNumberOfTotalSteps()) ;
 }
 
 Game.prototype.exportToSGF = function() {
@@ -238,7 +265,7 @@ Game.prototype.importFromSGF = function(strSGF) {
 }
 
 Game.prototype.saveStateToWave = function() {
-    if(!wave) return ;
+    if(typeof wave == 'undefined') return ;
     
     var saved = this.gameBoard.toSource() ;
         
@@ -255,9 +282,49 @@ Game.prototype.restoreStateFromWave = function() {
     eval("arr = "+saved) ;
     
     this.gameBoard = GameBoard.restoreFromUnstructuredData(arr) ;
+    this.setWaitAnimation(false) ;
+    this.renderBoard() ;
 }
 
-Game.prototype.restoreState
+Game.prototype.setWaitAnimation = function(on) {
+    if(!this.waitAnimationDiv) {
+        this._createWaitAnimationDiv() ;
+    }
+    if(on) {
+        this.waitAnimationDiv.style.visibility = "visible" ;
+    }
+    else {
+        this.waitAnimationDiv.style.visibility = "hidden" ;
+    }
+}
+
+Game.prototype._createWaitAnimationDiv = function () {
+    if(!this.waitAnimationDiv) {
+        this.waitAnimationDiv = document.createElement("DIV") ;
+        var style = this.waitAnimationDiv.style ;
+        style.position = "absolute" ;
+        style.left = "0px" ;
+        style.top = "0px" ;
+        style.width = this.boardImage.width + "px" ;
+        style.height = this.boardImage.height + "px" ;
+        style.zIndex = 9999 ;
+        style.background = "rgba(128, 128, 128, 0.5)" ;
+        style.verticalAlign =  "middle" ;
+        style.textAlign = "center" ;
+        style.display = "table" ;
+ 
+        this.div.appendChild(this.waitAnimationDiv) ;
+        
+        this.waitAnimationDiv.innerHTML = 
+            '<div style="vertical-align: middle; horizontal-align: center; display: table-cell">' +
+            '<font size="16" color="#FFFFFF">' +
+            'Waiting for Response</font></div>' ;
+    }
+}
+
+Game.prototype.isInWave = function() {
+    return typeof wave != "undefined" ;
+}
 
 // ----------------------------------------------------------
 // ----- Class: GameLog -------------------------------------
@@ -375,6 +442,10 @@ GameLog.prototype.clone = function() {
 
 GameLog.prototype.getLength = function() {
     return this.logLength ;
+}
+
+GameLog.prototype.getTotalLength = function() {
+    return this.log.length ;
 }
 
 // ----------------------------------------------------------
@@ -646,7 +717,10 @@ GameBoard.prototype.getField = function (x, y) {
 
 GameBoard.prototype.isLast = function (i, j) {
     var last = this.gameLog.lastEntry() ;
-    return last && last.i == i && last.j == j ;
+    return last && 
+           (last.type == GameLogEntry.TYPE_PUT || 
+            last.type == GameLogEntry.TYPE_SET) &&
+           last.i == i && last.j == j ;
 }
 
 GameBoard.prototype.getNumberOfRemovedStones = function(color) {
@@ -690,6 +764,30 @@ GameBoard.prototype.redo = function() {
     var last = this.gameLog.getLength() ;
     this.gameLog.redo() ;
     this.applyLog(this.gameLog, last) ;
+}
+
+GameBoard.prototype.gotoStep = function(i) {
+    if(i==this.gameLog.logLength) return ;
+    if(i<this.gameLog.logLength) {
+        this.board = new Array() ;
+        this.numberOfRemovedStones = new Array() ;
+        this.nextPlayerColor = 1 ;
+        this.gameLog.gotoEntry(i) ;
+        this.applyLog(this.gameLog) ;
+    }
+    else {
+        var last = this.gameLog.getLength() ;
+        this.gameLog.gotoEntry(i) ;
+        this.applyLog(this.gameLog, last) ;
+    }
+}
+
+GameBoard.prototype.getNumberOfTotalSteps = function() {
+    return this.gameLog.getTotalLength() ;
+}
+
+GameBoard.prototype.getNumberOfCurrentStep = function() {
+    return this.gameLog.getLength() ;
 }
 
 // ----------------------------------------------------------
