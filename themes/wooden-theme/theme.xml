@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<theme>
+  <name>Simple Board</name>
+  <board>
+    <size>19</size>
+    <image>
+      <url>board.png</url>
+      <leftOffset>12</leftOffset>
+      <topOffset>12</topOffset>
+      <verticalGap>23</verticalGap>
+      <horizontalGap>23</horizontalGap>
+    </image>
+  </board>
+  <stone>
+    <width>23</width>
+    <height>23</height>
+    <url type="1">black.png</url>
+    <url type="2">white.png</url>
+    <url type="1-last">black-last.png</url>
+    <url type="2-last">white-last.png</url>
+  </stone>
+</theme>
