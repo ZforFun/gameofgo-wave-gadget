@@ -5,8 +5,8 @@
     <size>19</size>
     <image>
       <url>board.png</url>
-      <leftOffset>12</leftOffset>
-      <topOffset>12</topOffset>
+      <leftOffset>15</leftOffset>
+      <topOffset>15</topOffset>
       <verticalGap>23</verticalGap>
       <horizontalGap>23</horizontalGap>
     </image>
