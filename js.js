@@ -782,8 +782,6 @@ ThemeManager.prototype.processBoardImageItem = function(image) {
         }
     }
 
-    alert("lo:"+lo+" hg:"+hg+" to:"+to+"vg:"+vg);
-
     this.boardGeometry = new GameBoardGeometry(lo, hg, to, vg) ;
 }
 
