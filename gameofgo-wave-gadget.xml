@@ -20,8 +20,10 @@
       <div id="main_div" style="position:relative">
         <table>
           <tr id="settings">
-            <td><a href="" onclick="game.undo();return false;">Undo</a></td>
-            <td><a href="" onclick="game.redo();return false;">Redo</a></td>
+             <td><a href="" onclick="game.gotoFirstStep();return false;">First</a></td>
+             <td><a href="" onclick="game.undo();return false;">Undo</a></td>
+             <td><a href="" onclick="game.redo();return false;">Redo</a></td>
+             <td><a href="" onclick="game.gotoLastStep();return false;">Last</a></td>
             <td><a href="" onclick="game.pass();return false;">Pass</a></td>
             <td><input type="text" id="themeUrl"/></td>
             <td><a href="" onclick="changeTheme();return false;">Change</a></td>
@@ -45,7 +47,12 @@
            prefs.set('themeUrl', themeUrl) ;
            game.changeTheme(themeUrl);
         }
-
+        function stateUpdated() {
+            game.restoreStateFromWave();
+            game.setWaitAnimation(false);
+            game.renderBoard() ;
+        }
+        
         function init(){
           if (wave && wave.isInWaveContainer()) {
 //            wave.setStateCallback(stateUpdated);
