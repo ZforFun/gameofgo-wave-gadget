@@ -592,8 +592,6 @@ function GameBoardGeometry(firstX, incX, firstY, incY) {
     this.incX = incX ;
     this.firstY = firstY ;
     this.incY = incY ;
-
-alert(""+this.firstX+","+this.firstY+"; "+this.incX+","+this.incY);    
 }
 
 GameBoardGeometry.prototype.getXforIndex = function(i) {
@@ -783,7 +781,9 @@ ThemeManager.prototype.processBoardImageItem = function(image) {
             hg = parseInt(item.firstChild.nodeValue) ;        
         }
     }
-    
+
+    alert("lo:"+lo+" hg:"+hg+" to:"+to+"vg:"+vg);
+
     this.boardGeometry = new GameBoardGeometry(lo, hg, to, vg) ;
 }
 
