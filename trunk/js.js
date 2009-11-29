@@ -40,7 +40,7 @@ Game.prototype.onThemeChange = function(boardImageUrl,
                                         blackLastStoneImageUrl, whiteLastStoneImageUrl,
                                         boardSize, 
                                         boardGeometry, stoneGeometry) {
-    this.initializeAppearance(boardImageUrl, 
+    this.initializeAppearance(boardImageUrl,
                               blackStoneImageUrl, whiteStoneImageUrl,
                               blackLastStoneImageUrl, whiteLastStoneImageUrl,
                               boardSize,
@@ -153,10 +153,8 @@ Game.prototype.onClickOnBoard = function(event) {
         y = event.pageY - this.div.offsetTop ;
     }
 
-alert(''+x+','+y);
-
     var i, j ;
-    
+
     i = this.boardGeometry.getIndexForX(x) ;
     j = this.boardGeometry.getIndexForY(y) ;
     
@@ -594,6 +592,8 @@ function GameBoardGeometry(firstX, incX, firstY, incY) {
     this.incX = incX ;
     this.firstY = firstY ;
     this.incY = incY ;
+
+alert(""+this.firstX+","+this.firstY+"; "+this.incX+","+this.incY);    
 }
 
 GameBoardGeometry.prototype.getXforIndex = function(i) {
