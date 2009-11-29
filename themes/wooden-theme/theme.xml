@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <theme>
   <name>Wooden Board</name>
-  <board>  
+  <board>
     <size>19</size>
     <image>
       <url>board.png</url>
@@ -14,9 +14,9 @@
   <stone>
     <width>23</width>
     <height>23</height>
-    <url type="1">black.png</url>
-    <url type="2">white.png</url>
-    <url type="1-last">black-last.png</url>
-    <url type="2-last">white-last.png</url>
+    <url type="1">black_mc.png</url>
+    <url type="2">white_mc.png</url>
+    <url type="1-last">black-last_mc.png</url>
+    <url type="2-last">white-last_mc.png</url>
   </stone>
 </theme>
