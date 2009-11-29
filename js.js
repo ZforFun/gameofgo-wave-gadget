@@ -63,7 +63,9 @@ Game.prototype.resetBoard = function() {
     // Save new div, add background
     this.boardImage = document.createElement("IMG") ;
     this.boardImage.onload = function() {
-      gadgets.window.adjustHeight();
+        if(gadgets) {
+             gadgets.window.adjustHeight();
+        }
     };
     this.boardImage.src = this.boardImageUrl ;
     this.registerOnClick() ;
@@ -71,7 +73,7 @@ Game.prototype.resetBoard = function() {
     this.div.appendChild(this.boardImage) ;
     
     // Add stones
-    this.stoneImages = Array() ;
+    this.stoneImages = new Array() ;
 
     for(i=0; i<this.boardSize; i++) {
         for(j=0; j<this.boardSize; j++) {
@@ -184,52 +186,52 @@ Game.prototype.pass = function() {
 }
 
 Game.prototype.exportToSGF = function() {
-  var currDate = new Date();
-  var year;
-  var month;
-  var day;
-  var hour;
-  var minute;
-  var i;
-  var strSGF = "(\n";
+    var currDate = new Date();
+    var year;
+    var month;
+    var day;
+    var hour;
+    var minute;
+    var i;
+    var strSGF = "(\n";
 
-  year = currDate.getFullYear();
-  if (currDate.getMonth()+1 < 10) month  = "0"+(currDate.getMonth()+1); else month  = (currDate.getMonth()+1);
-  if (currDate.getDate()    < 10) day    = "0"+currDate.getDate();      else day    = currDate.getDate();
-  if (currDate.getHours()   < 10) hour   = "0"+currDate.getHours();     else hour   = currDate.getHours();
-  if (currDate.getMinutes() < 10) minute = "0"+currDate.getMinutes();   else minute = currDate.getMinutes();
+    year = currDate.getFullYear();
+    if (currDate.getMonth()+1 < 10) month  = "0"+(currDate.getMonth()+1); else month  = (currDate.getMonth()+1);
+    if (currDate.getDate()    < 10) day    = "0"+currDate.getDate();      else day    = currDate.getDate();
+    if (currDate.getHours()   < 10) hour   = "0"+currDate.getHours();     else hour   = currDate.getHours();
+    if (currDate.getMinutes() < 10) minute = "0"+currDate.getMinutes();   else minute = currDate.getMinutes();
 
 /////////////////////////////////
 //First Node with general infoes
-  strSGF+=";GM[1]"; //Game = GO
-  strSGF+="FF[4]"; //SGF 4.0
-  strSGF+="RU[Japanese]"; //Japanese rules
-  strSGF+="SZ["+this.boardSize+"]"; //Board size: 19x19
-  strSGF+="PB[Black]"; //Black's name          //TODO: Getting name for black from Wave
-  strSGF+="PW[White]"; //White's name          //TODO: Getting name for white from Wave
-  strSGF+="DT["+year+"-"+month+"-"+day+"]"; //Date
-  strSGF+="TM["+hour+minute+"]"; //Time
+    strSGF+=";GM[1]"; //Game = GO
+    strSGF+="FF[4]"; //SGF 4.0
+    strSGF+="RU[Japanese]"; //Japanese rules
+    strSGF+="SZ["+this.boardSize+"]"; //Board size: 19x19
+    strSGF+="PB[Black]"; //Black's name          //TODO: Getting name for black from Wave
+    strSGF+="PW[White]"; //White's name          //TODO: Getting name for white from Wave
+    strSGF+="DT["+year+"-"+month+"-"+day+"]"; //Date
+    strSGF+="TM["+hour+minute+"]"; //Time
 
 ////////////////////////////////////
 // Adding the moves from the gameLog
-  for(i=0;i<this.gameBoard.gameLog.getLength();i++){
-    var stone;
-    strSGF+="\n;";
-    stone = this.gameBoard.gameLog.getStep(i);
-    if (stone.color==1) strSGF+="B["; else strSGF+="W[";
-    strSGF+=String.fromCharCode(97+stone.x);
-    strSGF+=String.fromCharCode(97+stone.y);
-    strSGF+="]";
-  }
+    for(i=0;i<this.gameBoard.gameLog.getLength();i++){
+        var stone;
+        strSGF+="\n;";
+        stone = this.gameBoard.gameLog.getEntry(i);
+        if (stone.color==1) strSGF+="B["; else strSGF+="W[";
+        strSGF+=String.fromCharCode(97+stone.i);
+        strSGF+=String.fromCharCode(97+stone.j);
+        strSGF+="]";
+    }
 
-  strSGF += "\n)";
-  return strSGF;
+    strSGF += "\n)";
+    return strSGF;
 }
 
 Game.prototype.importFromSGF = function(strSGF) {
-  var parser = new SGFParser(strSGF,this);
-  parser.parse();
-  this.renderBoard();
+    var parser = new SGFParser(strSGF,this);
+    parser.parse();
+    this.renderBoard();
 }
 
 Game.prototype.saveStateToWave = function() {
