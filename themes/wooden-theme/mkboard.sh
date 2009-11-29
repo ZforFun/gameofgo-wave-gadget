@@ -8,6 +8,7 @@ BOARD_VERTICAL_GAP=23
 BOARD_SIZE=19
 BOARD_FILENAME=board.png
 BOARD_BACKGROUND_COLOR="#EBCA70"
+BOARD_BACKGROUND_FILENAME="bg.png"
 
 STONE_SIZE=23
 BLACK_STONE_FILENAME=black.png
@@ -37,11 +38,14 @@ convert  "$WHITE_STONE_FILENAME" -fill "$BLACK_STONE_COLOR" -draw "$DRAW_COMMAND
 # Create the board...
 i="$(($BOARD_LEFT_OFFSET * 2 + (BOARD_SIZE - 1) * BOARD_HORIZONTAL_GAP))"
 j="$((BOARD_TOP_OFFSET * 2 + (BOARD_SIZE-1) * BOARD_VERTICAL_GAP))"
-convert  -size "$i"x"$j" \
-         xc:none -fill "$BOARD_BACKGROUND_COLOR" -background "$BOARD_BACKGROUND_COLOR" \
-         -draw "rectangle 0,0 $i,$j" \
-         "$BOARD_FILENAME"
+#convert  -size "$i"x"$j" \
+#         xc:none -fill "$BOARD_BACKGROUND_COLOR" -background "$BOARD_BACKGROUND_COLOR" \
+#         -draw "rectangle 0,0 $i,$j" \
+#         "_$BOARD_FILENAME"
 
+echo "The ideal size of the background image ($BOARD_BACKGROUND_FILENAME) is $i x $j."
+cp $BOARD_BACKGROUND_FILENAME $BOARD_FILENAME
+chmod 777 $BOARD_FILENAME
 
 # Put on the lines...
 i="$BOARD_LEFT_OFFSET"
