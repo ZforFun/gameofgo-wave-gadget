@@ -64,11 +64,15 @@
       <textarea id="txt" rows="10" cols="30"></textarea>
       <br>
       <button type=button onClick="readTA();">Process</button>
+      <button type=button onClick="cancel();">Cancel</button>
       </center>
       </div>
       <script>
       function readTA(){
         game.importFromSGF( document.getElementById("txt").value );
+        document.getElementById('divSGF').style.visibility='hidden';
+      }
+      function cancel(){
         document.getElementById('divSGF').style.visibility='hidden';
       }
       </script>
