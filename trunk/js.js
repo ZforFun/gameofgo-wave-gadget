@@ -11,6 +11,10 @@ Game.prototype.changeTheme = function (themeUrl) {
     this.themeManager.loadTheme() ;
 }
 
+Game.prototype.reset = function () {
+    this.gameBoard = new GameBoard(this.boardSize) ;
+}
+
 Game.prototype.initializeAppearance = function(boardImageUrl, 
                                                blackStoneImageUrl, whiteStoneImageUrl,
                                                blackLastStoneImageUrl, whiteLastStoneImageUrl,
@@ -19,7 +23,6 @@ Game.prototype.initializeAppearance = function(boardImageUrl,
     if(this.boardSize != boardSize) {
        this.boardSize = boardSize ;
        this.gameBoard = new GameBoard(boardSize) ;
-       this.gameLog   = new GameLog() ;
     }
 
     this.boardImageUrl = boardImageUrl ;
@@ -45,11 +48,11 @@ Game.prototype.onThemeChange = function(boardImageUrl,
                               blackLastStoneImageUrl, whiteLastStoneImageUrl,
                               boardSize,
                               boardGeometry, stoneGeometry) ;
-    this.resetBoard() ;
+    this.resetBoardUI() ;
     this.renderBoard() ;
 }
 
-Game.prototype.resetBoard = function() {
+Game.prototype.resetBoardUI = function() {
     var i, j ;
 
     // Remove stones, and old background...
@@ -955,7 +958,7 @@ function SGFParser(str, game) {
 }
 
 SGFParser.prototype.parse = function() {
-    this.game.resetBoard();
+    this.game.reset();
     if (!this.consumeWhiteSpaces()) {
         alert("Unexpected end of file");
         return;
