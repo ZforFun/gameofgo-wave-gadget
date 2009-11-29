@@ -114,28 +114,30 @@ Game.prototype.renderBoard = function() {
 Game.prototype.setStone = function(i, j, color, last) {
     var x, y ;
     var visibility ;
+    var src ;
     var im = this.stoneImages[i*this.boardSize+j] ;
 
     if(color) {
         if(color == 1) {
             if (!last) {
-              im.src = this.blackStoneImageUrl ;
+              src = this.blackStoneImageUrl ;
             } else {
-              im.src = this.blackLastStoneImageUrl ;
+              src = this.blackLastStoneImageUrl ;
             }
         } else {
             if (!last) {
-              im.src = this.whiteStoneImageUrl ;
+              src = this.whiteStoneImageUrl ;
             } else {
-              im.src = this.whiteLastStoneImageUrl ;
+              src = this.whiteLastStoneImageUrl ;
             }
         }
         visibility = "visible" ;
     } else {
         visibility = "hidden" ;
     }
-    im.style.visibility = visibility ;
     
+    if(im.src != src) { im.src = src ; }
+    if(im.style.visibility != visibility) { im.style.visibility = visibility ; }
 }
 
 Game.prototype.onClickOnBoard = function(event) {
@@ -158,11 +160,11 @@ Game.prototype.onClickOnBoard = function(event) {
     i = this.boardGeometry.getIndexForX(x) ;
     j = this.boardGeometry.getIndexForY(y) ;
     
-    if(i>=this.boardSize || j>=this.boardSize) {
+    if(i>=this.boardSize || j>=this.boardSize || i<0 || j<0) {
         return ;
     }
 
-    this.gameBoard.setMove(i, j) ;
+    this.gameBoard.makeMove(i, j) ;
     this.renderBoard() ;
 }
 
@@ -252,6 +254,41 @@ Game.prototype.restoreStateFromWave = function() {
 
 Game.prototype.restoreState
 
+// ----------------------------------------------------------
+// ----- Class: GameLog -------------------------------------
+// ----------------------------------------------------------
+
+function GameLogEntry(type, i, j, color) {
+    this.type   = type ;
+    this.i      = i ;
+    this.j      = j ;
+    this.color  = color ;
+    // this.followup = null ;
+}
+
+GameLogEntry.restoreFromUnstructuredData = function(data) {
+    var rv = 
+        new GameLogEntry(data.type, data.i, data.j, data.color) ;
+        
+    if(data.followup) {
+        rv.followup = data.followup.slice(0) ;
+    }
+    return rv ;
+}
+
+GameLogEntry.TYPE_PUT = 1;
+GameLogEntry.TYPE_REMOVE = 2;
+GameLogEntry.TYPE_SET = 3;
+GameLogEntry.TYPE_PASS = 4;
+
+
+GameLogEntry.prototype.addFollowup = function(i, j) {
+    if(!this.followup) {
+        this.followup = new Array() ;
+    }
+    this.followup.push({'i':i, 'j':j}) ;
+}
+
 
 // ----------------------------------------------------------
 // ----- Class: GameLog -------------------------------------
@@ -267,70 +304,57 @@ GameLog.restoreFromUnstructuredData = function(data) {
     rv.logLength = data.logLength ;
     
     for(var i=0; i<data.log.length; i++) {
-        rv.log[i] = new GameBoardStone(data.log[i].x, data.log[i].y, data.log[i].color) ;
+        rv.log[i] = 
+            GameLogEntry.restoreFromUnstructuredData(data.log[i]) ;
     }
     
     return rv ;
 }
 
-GameLog.prototype.addStep = function(i, j, color) {
-    this._addStep(new GameBoardStone(i, j, color)) ;
+GameLog.prototype.addEntry = function(type, i, j, color) {
+    if(this.logLength<this.log.length) {
+        this.log.splice(this.logLength, this.log.length-this.logLength) ;
+    }
+    this.log.push(new GameLogEntry(type, i, j, color)) ;
+    this.logLength++ ;
 }
 
-GameLog.prototype.pass = function() {
-    var lastStep = this.lastStep() ;
-    var color = 1 ;
-    if(lastStep && lastStep.color == 1) {
-        color = 2 ;
+GameLog.prototype.addFollowup = function(i, j) {
+    var last = this.lastEntry() ;
+    if(last) {
+        last.addFollowup(i, j) ;
     }
-    this._addStep(GameBoardStone.newPassStone(color)) ;
+    
+    return last ;
+}
+
+GameLog.prototype.gotoEntry = function(step) {
+    if(step>this.log.length) {
+        step = this.log.length ;
+    }
+    this.logLength = step ;
 }
 
 GameLog.prototype.undo = function() {
-    var success = false ;
-    if(this.logLength) {
-        this.logLength -= 1 ;
-        success = true ;
-    }
-
-    return success ;
+    if(this.logLength) this.logLength-- ;
+    return this.logLength ;
 }
 
 GameLog.prototype.redo = function() {
-    var rv = null ;
-    if(this.logLength<this.log.length) {
-        rv = this.getStep(this.logLength) ;
-        this.logLength += 1 ;
-    }
-
-    return rv ;
+    if(this.logLength<this.log.length) this.logLength++ ;
+    return this.logLength ;
 }
 
-GameLog.prototype._addStep = function(stone) {
-    this.log.length = this.logLength ;
-    this.log[this.logLength] = stone ;
-    this.logLength = this.log.length ;
-}
-
-GameLog.prototype.getStep = function(index) {
+GameLog.prototype.getEntry = function(index) {
     return this.log[index] ;
 }
 
-GameLog.prototype.lastStep = function() {
+GameLog.prototype.lastEntry = function() {
     var rv = null ;
     if(this.logLength>0) {
         rv = this.log[this.logLength-1] ;
     }
     return rv ;
-}
-
-GameLog.prototype.isLast = function(x, y){
-  var lastStep = this.lastStep();
-  if (!lastStep) {
-    return false;
-  } else {
-    if (lastStep.x==x && lastStep.y==y) return true; else return false;
-  }
 }
 
 GameLog.prototype.clone = function() {
@@ -383,13 +407,18 @@ function GameBoard(boardSize) {
     this.board = new Array() ;
     this.boardSize = boardSize ;
     this.gameLog = new GameLog() ;
+    this.numberOfRemovedStones=[];
+    this.nextPlayerColor = 1;
 }
 
+// TODO: Update after log update
 GameBoard.restoreFromUnstructuredData = function(data) {
     var rv = new GameBoard(0) ;
     rv.board = data.board ;
     rv.boardSize = data.boardSize ;
     rv.gameLog = GameLog.restoreFromUnstructuredData(data.gameLog) ;
+    rv.numberOfRemovedStones = data.numberOfRemovedStones ;
+    rv.nextPlayerColor = data.nextPlayerColor ;
 
     return rv ;
 }
@@ -398,30 +427,100 @@ GameBoard.prototype.serializeToString = function() {
     return this.toSource()
 }
 
-GameBoard.prototype.setMove = function (x, y, color) {
+// Public:
+// Called to perform a legal Go move.
+// Writes log.
+GameBoard.prototype.makeMove = function (x, y, color) {
     var moveAllowed = false ;
+
     // Determine the other color and other color
     if(color == null) {
-        color = 1 ;
-        var lastLogStep = this.gameLog.lastStep() ;
-        if(lastLogStep && lastLogStep.color == 1) {
-            color = 2 ;
-        }
+        color = this.nextPlayerColor ;
     }
 
     moveAllowed = this.tryToApplyStepToBoard(x, y, color);
 
-    if(moveAllowed)
-        this.gameLog.addStep(x, y, color) ;
+    if(!moveAllowed) {
+        this.undo() ;
+        return false ;
+    }
+    
 
     return moveAllowed ;
 }
 
-GameBoard.prototype.tryToApplyStepToBoard = function(x, y, color) {
-    var field = this.board[x*this.boardSize+y] ;
+// Public:
+// Called to unconditionally places a stone.
+// Does not count removed stones
+GameBoard.prototype.setStone = function(i, j, color, noLog) {
+    this.board[i*this.boardSize+j] = color ;
+    if(!noLog) {
+        this.gameLog.addEntry(GameLogEntry.TYPE_SET, i, j, color) ;
+    }
+}
 
-    // If field is occupied, this is an invalid move...
-    if(field) return false ;
+// Protected:
+// Called to remove a stone as a followup action
+// Counts removed stones
+GameBoard.prototype.removeStone = function(i, j, noLog) {
+    var color = this.board[i*this.boardSize+j] ;
+    if(!color) {
+        return false ;
+    }
+    
+    this.board[i*this.boardSize+j]=null ;
+    this.numberOfRemovedStones[color-1]++ ;
+    if(!noLog) {
+        this.gameLog.addFollowup(i, j) ;
+    }
+    
+    true ;
+}
+
+// Protected:
+// Called to put a stone on tha board as part of a normal game step.
+GameBoard.prototype.putStone = function(i, j, color, noLog) {
+    var fieldColor = this.board[i*this.boardSize+j] ; 
+    if(fieldColor) {
+        return false ;
+    }
+    
+    this.board[i*this.boardSize+j] = color ;
+    this.nextPlayerColor = 1 ;
+    if(color==1) {
+        this.nextPlayerColor = 2 ;
+    }
+
+    
+    if(!noLog) {
+        this.gameLog.addEntry(GameLogEntry.TYPE_PUT, i, j, color) ;
+    }
+    
+    return true ;
+}
+
+// Public:
+// Called to mark that the user has passed.
+GameBoard.prototype.pass = function(color, noLog) {
+    if(!color) {
+        color = this.nextPlayerColor ;
+    }
+
+    this.nextPlayerColor = 1 ;
+    if(color==1) {
+        this.nextPlayerColor = 2 ;
+    }
+    
+    if(!noLog) {
+        this.gameLog.addEntry(GameLog.TYPE_PASS, 0, 0, color) ;
+    }
+}
+
+// Protected:
+GameBoard.prototype.tryToApplyStepToBoard = function(x, y, color) {
+    if(!this.putStone(x, y, color)) {
+        return false ;
+    }
         
     var otherColor = 1;
     if(color == 1) otherColor = 2 ;
@@ -440,35 +539,25 @@ GameBoard.prototype.tryToApplyStepToBoard = function(x, y, color) {
             
         this.walkShape(neighbour.x, neighbour.y, shape, lives) ;
         // There is a shape, and it has only one life (the one we are placing on)
-        if(shape.data.length > 0 && lives.data.length <=1) {
+        if(!shape.isEmpty() && lives.isEmpty()) {
             this.removeShape(shape) ;
             moveAllowed = true ;
         }
     }
-    
-    this.board[x*this.boardSize+y] = color ;
-    
+        
     if(!moveAllowed) {
         var shape = new SortedSet(gameBoardStoneComparator) ;
         var lives = new SortedSet(gameBoardStoneComparator) ;
         this.walkShape(x, y, shape, lives) ;
-        if(lives.data.length>=1) {
+        if(!lives.isEmpty()>=1) {
             moveAllowed = true ;
         }
-    }
-
-    if(!moveAllowed) {
-        this.board[x*this.boardSize+y] = null ;
     }
     
     return moveAllowed ;
 }
 
-GameBoard.prototype.pass = function(color) {
-//TODO: Using color in a similar way as in the method setMove
-    this.gameLog.pass() ;
-}
-
+// Protected:
 GameBoard.prototype.getNeighbours = function(x, y) {
     var rv = new SortedSet(gameBoardStoneComparator) ;
     
@@ -503,6 +592,7 @@ GameBoard.prototype.getNeighbours = function(x, y) {
     return rv ;
 }
 
+// Protected:
 GameBoard.prototype.walkShape = function(x, y, shape, lives) {
     
     // Only proceed if something is at x, y
@@ -537,10 +627,11 @@ GameBoard.prototype.walkShape = function(x, y, shape, lives) {
     return shape ;
 }
 
+// Protected:
 GameBoard.prototype.removeShape = function (shape) {
     for(var i=0; i<shape.data.length; i++) {
         var stone = shape.data[i] ;
-        this.board[stone.x*this.boardSize+stone.y] = null ; 
+        this.removeStone(stone.x, stone.y) ;
     }
 } 
 
@@ -548,39 +639,52 @@ GameBoard.prototype.getField = function (x, y) {
     return this.board[x*this.boardSize+y] ;
 }
 
-GameBoard.prototype.isLast = function (x, y) {
-    return this.gameLog.isLast(x, y);
+GameBoard.prototype.isLast = function (i, j) {
+    var last = this.gameLog.lastEntry() ;
+    return last && last.i == i && last.j == j ;
 }
 
-GameBoard.prototype.applyLog = function (log) {
+GameBoard.prototype.getNumberOfRemovedStones = function(color) {
+    return this.numberOfRemovedStones[color-1] ;
+}
+
+GameBoard.prototype.applyLog = function (log, from) {
     var len = log.getLength() ;
     var i ;
 
-    for(i=0; i<len; i++) {
-        var s = log.getStep(i) ;
-        this.tryToApplyStepToBoard(s.x, s.y, s.color) ;
+    if(!from) from = 0 ;
+    for(i=from; i<len; i++) {
+        var s = log.getEntry(i) ;
+        if(s.type == GameLogEntry.TYPE_PASS) {
+            this.pass(s.color, true) ;
+        }
+        else if(s.type == GameLogEntry.TYPE_SET) {
+            this.setStone(s.i, s.j, s.color, true) ; 
+        }
+        else if(s.type == GameLogEntry.TYPE_PUT) {
+            this.putStone(s.i, s.j, s.color, true) ;
+            for(var fi in s.followup) {
+                var f = s.followup[fi] ;
+                this.removeStone(f.i, f.j, true) ;
+            };
+        }
     }
     
     this.gameLog = log ;
 }
 
-GameBoard.prototype.reset = function() {
-    this.board = new Array() ;
-    this.gameLog = new GameLog() ;
-}
-
 GameBoard.prototype.undo = function() {
-    var log = this.gameLog.clone() ;
-    this.reset() ;
-    log.undo() ;
-    this.applyLog(log) ;
+    this.board = new Array() ;
+    this.numberOfRemovedStones = new Array() ;
+    this.nextPlayerColor = 1 ;
+    this.gameLog.undo() ;
+    this.applyLog(this.gameLog) ;
 }
 
 GameBoard.prototype.redo = function() {
-    var redone = this.gameLog.redo() ;
-    if(redone) {
-        this.tryToApplyStepToBoard(redone.x, redone.y, redone.color) ;
-    }
+    var last = this.gameLog.getLength() ;
+    this.gameLog.redo() ;
+    this.applyLog(this.gameLog, last) ;
 }
 
 // ----------------------------------------------------------
@@ -686,6 +790,10 @@ SortedSet.prototype.isEmpty = function() {
 SortedSet.prototype.pop = function() {
     return this.data.pop() ;
 }
+
+// ----------------------------------------------------------
+// ----- Class: ThemeManager --------------------------------
+// ----------------------------------------------------------
 
 function ThemeManager(game, url) {
     this.game = game ;
@@ -817,6 +925,10 @@ ThemeManager.prototype.processStoneItem = function(stone) {
     this.stoneGeometry = new GameStoneGeometry(w, h) ;
 }
 
+// ----------------------------------------------------------
+// ----- Class: DummyThemeManager ---------------------------
+// ----------------------------------------------------------
+
 function DummyThemeManager(game, url) {
     var prefix = "themes/basic-theme/" ;
     game.onThemeChange(prefix+"board.png",
@@ -829,6 +941,10 @@ function DummyThemeManager(game, url) {
                        new GameStoneGeometry(24, 24)) ;
 }
 
+// ----------------------------------------------------------
+// ----- Class: SGFParser -----------------------------------
+// ----------------------------------------------------------
+
 function SGFParser(str, game) {
     this.str   = str;
     this.game  = game;
@@ -837,51 +953,50 @@ function SGFParser(str, game) {
 }
 
 SGFParser.prototype.parse = function() {
-  this.game.resetBoard();
-  if (!this.consumeWhiteSpaces()) {
-    alert("Unexpected end of file");
-    return;
-  }
-  if (this.str.charAt(0)!='('){
-    alert("Non-expected character: '"+this.str.charAt(0)+"'. Expected: '('");
-    return;
-  }
-  this.str = this.str.slice(1);
-
-  while(this.parseProperty()){
-    if (this.propertyName=="B"){
-      if (this.propertyValue.length==0) {
-        this.game.gameBoard.pass(1);
-      } else if (this.propertyValue.length!=2) {
-        alert("Non-expected property-value: '"+this.propertyValue+"'.");
+    this.game.resetBoard();
+    if (!this.consumeWhiteSpaces()) {
+        alert("Unexpected end of file");
         return;
-      } else {
-        var i=this.propertyValue.charCodeAt(0)-97;
-        var j=this.propertyValue.charCodeAt(1)-97;
-        if (i>19 || j>19 || i<0 || j<0) {
-          alert("Non-expected property-value: '"+this.propertyValue+"'.");
-          return;
-        }
-        this.game.gameBoard.setMove(i,j,1);
-      }
-
-    } else if (this.propertyName=="W"){
-       if (this.propertyValue.length==0) {
-        this.game.gameBoard.pass(2);
-      } else if (this.propertyValue.length!=2) {
-        alert("Non-expected property-value: '"+this.propertyValue+"'.");
-        return;
-      } else {
-        var i=this.propertyValue.charCodeAt(0)-97;
-        var j=this.propertyValue.charCodeAt(1)-97;
-        if (i>19 || j>19 || i<0 || j<0) {
-          alert("Non-expected property-value: '"+this.propertyValue+"'.");
-          return;
-        }
-        this.game.gameBoard.setMove(i,j,2);
-      }
     }
-  }
+    if (this.str.charAt(0)!='('){
+        alert("Non-expected character: '"+this.str.charAt(0)+"'. Expected: '('");
+        return;
+    }
+    this.str = this.str.slice(1);
+
+    while(this.parseProperty()){
+        if (this.propertyName=="B"){
+            if (this.propertyValue.length==0) {
+                this.game.gameBoard.pass(1);
+            } else if (this.propertyValue.length!=2) {
+                alert("Non-expected property-value: '"+this.propertyValue+"'.");
+                return;
+            } else {
+                var i=this.propertyValue.charCodeAt(0)-97;
+                var j=this.propertyValue.charCodeAt(1)-97;
+                if (i>19 || j>19 || i<0 || j<0) {
+                    alert("Non-expected property-value: '"+this.propertyValue+"'.");
+                    return;
+                }
+                this.game.gameBoard.makeMove(i,j,1);
+            }
+        } else if (this.propertyName=="W"){
+            if (this.propertyValue.length==0) {
+                this.game.gameBoard.pass(2);
+            } else if (this.propertyValue.length!=2) {
+                alert("Non-expected property-value: '"+this.propertyValue+"'.");
+                return;
+            } else {
+                var i=this.propertyValue.charCodeAt(0)-97;
+                var j=this.propertyValue.charCodeAt(1)-97;
+                if (i>19 || j>19 || i<0 || j<0) {
+                    alert("Non-expected property-value: '"+this.propertyValue+"'.");
+                    return;
+                }
+                this.game.gameBoard.makeMove(i,j,2);
+            }
+        }
+    }
 }
 
 SGFParser.prototype.parseProperty = function(){
