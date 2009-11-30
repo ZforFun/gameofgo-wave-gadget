@@ -293,6 +293,7 @@ Game.prototype.setWaitAnimation = function(on) {
     if(!this.waitAnimationDiv) {
         this._createWaitAnimationDiv() ;
     }
+    this._resizeWaitAnimationDiv() ;
     if(on) {
         this.waitAnimationDiv.style.visibility = "visible" ;
     }
@@ -308,8 +309,6 @@ Game.prototype._createWaitAnimationDiv = function () {
         style.position = "absolute" ;
         style.left = "0px" ;
         style.top = "0px" ;
-        style.width = this.boardImage.width + "px" ;
-        style.height = this.boardImage.height + "px" ;
         style.zIndex = 9999 ;
         style.background = "rgba(128, 128, 128, 0.5)" ;
         style.verticalAlign =  "middle" ;
@@ -322,6 +321,15 @@ Game.prototype._createWaitAnimationDiv = function () {
             '<div style="vertical-align: middle; horizontal-align: center; display: table-cell">' +
             '<font size="16" color="#FFFFFF">' +
             'Waiting for Response</font></div>' ;
+    }
+}
+
+Game.prototype._resizeWaitAnimationDiv = function() {
+    if(this.waitAnimationDiv) {
+        if(this.boardImage && this.boardImage.width && this.boardImage.height) {
+            style.width = this.boardImage.width + "px" ;
+            style.height = this.boardImage.height + "px" ;
+        }
     }
 }
 
