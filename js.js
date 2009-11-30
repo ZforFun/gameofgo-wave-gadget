@@ -153,6 +153,15 @@ Game.prototype.setStone = function(i, j, color, last) {
     if(im.style.visibility != visibility) { im.style.visibility = visibility ; }
 }
 
+Game.prototype.renderBoardAbstract_ = function() {
+    if(this.isInWave()) {
+        this.saveStateToWave() ;
+        this.setWaitAnimation(true) ;
+    } else {
+        this.renderBoard() ;
+    }
+}
+
 Game.prototype.onClickOnBoard = function(event) {
     var x, y ;
 
@@ -161,7 +170,7 @@ Game.prototype.onClickOnBoard = function(event) {
     } else {
         x = event.pageX - this.div.offsetLeft ;
     }
-    
+
     if(event.offsetY) {
         y = event.offsetY ;
     } else {
@@ -172,39 +181,33 @@ Game.prototype.onClickOnBoard = function(event) {
 
     i = this.boardGeometry.getIndexForX(x) ;
     j = this.boardGeometry.getIndexForY(y) ;
-    
+
     if(i>=this.boardSize || j>=this.boardSize || i<0 || j<0) {
         return ;
     }
 
     this.gameBoard.makeMove(i, j) ;
-    
-    if(this.isInWave()) {
-        this.saveStateToWave() ;
-        this.setWaitAnimation(true) ;
-    } else {
-        this.renderBoard() ;
-    }
+    this.renderBoardAbstract_();
 }
 
 Game.prototype.undo = function() {
     this.gameBoard.undo() ;
-    this.renderBoard() ;
+    this.renderBoardAbstract_();
 }
 
 Game.prototype.redo = function() {
     this.gameBoard.redo() ;
-    this.renderBoard() ;
+    this.renderBoardAbstract_();
 }
 
 Game.prototype.pass = function() {
     this.gameBoard.pass() ;
-    this.renderBoard() ;
+    this.renderBoardAbstract_();
 }
 
 Game.prototype.gotoStep = function(i) {
     this.gameBoard.gotoStep(i) ;
-    this.renderBoard() ;
+    this.renderBoardAbstract_();
 }
 
 Game.prototype.gotoFirstStep = function () {
@@ -260,8 +263,8 @@ Game.prototype.exportToSGF = function() {
 
 Game.prototype.importFromSGF = function(strSGF) {
     var parser = new SGFParser(strSGF,this);
-    parser.parse();
-    this.renderBoard();
+    parser.parse();  
+    this.renderBoardAbstract_();
 }
 
 Game.prototype.saveStateToWave = function() {
