@@ -12,11 +12,11 @@ To Do:
 
   * Implement a simple KO-rule 
   * Counting mode (with signing stones as dead)
-  * Button First (Instead of Undo-ing to the beginning)
-  * Button Last (Instead of Redo-ing to the end)
   * Add messages to the UI: e.g. "You can only put a stone on an empty place".
 
 Done:
 
+  * Button First (Instead of Undo-ing to the beginning)
+  * Button Last (Instead of Redo-ing to the end)
   * Implement the SGF-parser (in a simple way for the time being)
   * Undo is not smooth on highly filled board 
