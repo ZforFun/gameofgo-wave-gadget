@@ -21,8 +21,8 @@ Game.prototype.initializeAppearance = function(boardImageUrl,
                                                boardSize, 
                                                boardGeometry, stoneGeometry) {
     if(this.boardSize != boardSize) {
-       this.boardSize = boardSize ;
-       this.gameBoard = new GameBoard(boardSize) ;
+        // TODO: report error
+        return ;
     }
 
     this.boardImageUrl = boardImageUrl ;
@@ -327,8 +327,8 @@ Game.prototype._createWaitAnimationDiv = function () {
 Game.prototype._resizeWaitAnimationDiv = function() {
     if(this.waitAnimationDiv) {
         if(this.boardImage && this.boardImage.width && this.boardImage.height) {
-            style.width = this.boardImage.width + "px" ;
-            style.height = this.boardImage.height + "px" ;
+            this.waitAnimationDiv.style.width = this.boardImage.width + "px" ;
+            this.waitAnimationDiv.style.height = this.boardImage.height + "px" ;
         }
     }
 }
