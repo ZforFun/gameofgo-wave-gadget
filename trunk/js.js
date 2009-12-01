@@ -33,6 +33,7 @@ Game.prototype.initializeAppearance = function(boardImageUrl,
     this.whiteLastStoneImageUrl = whiteLastStoneImageUrl ;
 
     this.boardSize = boardSize ;
+    this.gameBoard = new GameBoard(this.boardSize) ;
     this.boardGeometry = boardGeometry ;
     this.stoneGeometry = stoneGeometry ;
 
