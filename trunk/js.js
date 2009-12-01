@@ -932,6 +932,11 @@ ThemeManager.prototype.loadTheme = function() {
 }
 
 ThemeManager.prototype.onThemeUrlFetched = function(obj) {
+    if(typeof console != "undefined") {
+        console.debug("Theme Manager Fetch:") ;
+        console.debug(obj) ;
+    }
+
     this.boardGeometry = null ;
     this.boardImageUrl = this.url ;
     this.blackStoneImageUrl = this.url ;
