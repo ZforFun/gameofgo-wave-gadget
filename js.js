@@ -306,15 +306,16 @@ Game.prototype._createWaitAnimationDiv = function () {
     if(!this.waitAnimationDiv) {
         this.waitAnimationDiv = document.createElement("DIV") ;
         var style = this.waitAnimationDiv.style ;
-        style.position = "absolute" ;
-        style.left = "0px" ;
-        style.top = "0px" ;
-        style.zIndex = 9999 ;
-        style.background = "rgba(128, 128, 128, 0.5)" ;
-        style.verticalAlign =  "middle" ;
-        style.textAlign = "center" ;
-        style.display = "table" ;
- 
+        with(this.waitAnimationDiv) {
+            style.position = "absolute" ;
+            style.left = "0px" ;
+            style.top = "0px" ;
+            style.zIndex = 9999 ;
+            style.background = "rgba(128, 128, 128, 0.5)" ;
+            style.verticalAlign =  "middle" ;
+            style.textAlign = "center" ;
+            style.display = "table" ;
+        }
         this.div.appendChild(this.waitAnimationDiv) ;
         
         this.waitAnimationDiv.innerHTML = 
