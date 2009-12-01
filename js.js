@@ -20,7 +20,7 @@ Game.prototype.initializeAppearance = function(boardImageUrl,
                                                blackLastStoneImageUrl, whiteLastStoneImageUrl,
                                                boardSize, 
                                                boardGeometry, stoneGeometry) {
-    if(this.boardSize != boardSize) {
+    if(this.boardSize && (this.boardSize != boardSize)) {
         // TODO: report error
         return ;
     }
