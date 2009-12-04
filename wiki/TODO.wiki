@@ -10,6 +10,7 @@ If a point is done, move it into the "Done" list
 
 To Do:
 
+  * Implement players and alternating moves
   * Implement a simple KO-rule 
   * Counting mode (with signing stones as dead)
   * Add messages to the UI: e.g. "You can only put a stone on an empty place".
