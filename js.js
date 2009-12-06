@@ -191,8 +191,8 @@ Game.prototype.onClickOnBoard = function(event) {
     this.renderBoardAbstract_();
 }
 
-Game.prototype.undo = function() {
-    this.gameBoard.undo() ;
+Game.prototype.undo = function(trimLog) {
+    this.gameBoard.undo(trimLog) ;
     this.renderBoardAbstract_();
 }
 
@@ -422,8 +422,12 @@ GameLog.prototype.gotoEntry = function(step) {
     this.logLength = step ;
 }
 
-GameLog.prototype.undo = function() {
+// trimLog specifies that the rest of the log should be thrown out (after the undo).
+GameLog.prototype.undo = function(trimLog) {
     if(this.logLength) this.logLength-- ;
+    if(trimLog) {
+        this.log.splice(this.logLength, this.log.length-this.logLength) ;
+    }
     return this.logLength ;
 }
 
@@ -532,11 +536,10 @@ GameBoard.prototype.makeMove = function (x, y, color) {
     moveAllowed = this.tryToApplyStepToBoard(x, y, color);
 
     if(!moveAllowed) {
-        this.undo() ;
+        this.undo(/*trimLog=*/true) ;
         return false ;
     }
     
-
     return moveAllowed ;
 }
 
@@ -767,11 +770,11 @@ GameBoard.prototype.applyLog = function (log, from) {
     this.gameLog = log ;
 }
 
-GameBoard.prototype.undo = function() {
+GameBoard.prototype.undo = function(trimLog) {
     this.board = new Array() ;
     this.numberOfRemovedStones = new Array() ;
     this.nextPlayerColor = 1 ;
-    this.gameLog.undo() ;
+    this.gameLog.undo(trimLog) ;
     this.applyLog(this.gameLog) ;
 }
 
