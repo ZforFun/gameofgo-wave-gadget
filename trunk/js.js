@@ -1123,62 +1123,68 @@ SGFParser.prototype.parse = function() {
 }
 
 SGFParser.prototype.parseProperty = function(){
-  var ok = true;
-  ok = this.consumeWhiteSpaces();
-  while(ok){
-    if (this.str.charAt(0)=='(') {
-      this.str = this.str.slice(1);
-    } else if (this.str.charAt(0)==';') {
-      this.str = this.str.slice(1);
-    } else if (this.str.charAt(0)==')') {
-      ok = false;
-      break;
-    } else {
-      ok = this.parsePropertyName();
-      if (!ok) break;
-      ok = this.consumeWhiteSpaces();
-      if (!ok) break;
-      ok = this.parsePropertyValue();
-      break;
-    }
+    var ok = true;
     ok = this.consumeWhiteSpaces();
-  }
-  return ok;
+    while(ok){
+        if (this.str.charAt(0)=='(') {
+            this.str = this.str.slice(1);
+        }
+        else if (this.str.charAt(0)==';') {
+            this.str = this.str.slice(1);
+        }
+        else if (this.str.charAt(0)==')') {
+            ok = false;
+            break;
+        }
+        else {
+            ok = this.parsePropertyName();
+            if (!ok) break;
+            ok = this.consumeWhiteSpaces();
+            if (!ok) break;
+            ok = this.parsePropertyValue();
+            break;
+        }
+        ok = this.consumeWhiteSpaces();
+    }
+    return ok;
 }
 
 SGFParser.prototype.parsePropertyName = function(){
-  this.propertyName = "";
-  while(this.str.length>0 && this.str.charAt(0)!='['){
-    this.propertyName+=this.str.charAt(0);
-    this.str = this.str.slice(1);
-  }
-  if (this.str.length==0) {
-    return false;
-  } else { //str[0]=='['
-    this.str = this.str.slice(1);
-    return true;
-  }
+    this.propertyName = "";
+    while(this.str.length>0 && this.str.charAt(0)!='['){
+        this.propertyName+=this.str.charAt(0);
+        this.str = this.str.slice(1);
+    }
+    if (this.str.length==0) {
+        return false;
+    }
+    else { //str[0]=='['
+        this.str = this.str.slice(1);
+        return true;
+    }
 }
 
 SGFParser.prototype.parsePropertyValue = function(){
-  this.propertyValue = "";
-  while(this.str.length>0 && this.str.charAt(0)!=']'){
-    this.propertyValue+=this.str.charAt(0);
-    this.str = this.str.slice(1);
-  }
-  if (this.str.length==0) {
-    return false;
-  } else { //str[0]==']'
-    this.str = this.str.slice(1);
-    return true;
-  }
+    this.propertyValue = "";
+    while(this.str.length>0 && this.str.charAt(0)!=']'){
+        this.propertyValue+=this.str.charAt(0);
+        this.str = this.str.slice(1);
+    }
+    if (this.str.length==0) {
+        return false;
+    }
+    else { //str[0]==']'
+        this.str = this.str.slice(1);
+        return true;
+    }
 }
 
 SGFParser.prototype.consumeWhiteSpaces = function(){
-  while (this.str.length>0 && (this.str.charAt(0)==" " || this.str.charAt(0)=="\n" || this.str.charAt(0)=="\t")) {
-    this.str = this.str.slice(1);
-  }
-  return this.str.length>0;
+    while (this.str.length>0 && 
+        (this.str.charAt(0)==" " || this.str.charAt(0)=="\n" || this.str.charAt(0)=="\t")) {
+        this.str = this.str.slice(1);
+    }
+    return this.str.length>0;
 }
 
 
@@ -1186,50 +1192,46 @@ function serialize(_obj)
 {
     if(_obj==null) return "";
    // Let Gecko browsers do this the easy way
-   if (typeof _obj.toSource !== 'undefined' && typeof _obj.callee === 'undefined')
-   {
-      return _obj.toSource();
-   }
+    if (typeof _obj.toSource !== 'undefined' && typeof _obj.callee === 'undefined') {
+        return _obj.toSource();
+    }
 
-   // Other browsers must do it the hard way
-   switch (typeof _obj)
-   {
-      // numbers, booleans, and functions are trivial:
-      // just return the object itself since its default .toString()
-      // gives us exactly what we want
-      case 'number':
-      case 'boolean':
-      case 'function':
-         return _obj;
-         break;
+    // Other browsers must do it the hard way
+    switch (typeof _obj) {
+        // numbers, booleans, and functions are trivial:
+        // just return the object itself since its default .toString()
+        // gives us exactly what we want
+        case 'number':
+        case 'boolean':
+        case 'function':
+            return _obj;
+            break;
 
-      // for JSON format, strings need to be wrapped in quotes
-      case 'string':
-         return '\'' + _obj + '\'';
-         break;
+        // for JSON format, strings need to be wrapped in quotes
+        case 'string':
+            return '\'' + _obj + '\'';
+            break;
 
-      case 'object':
-         var str;
-         if (_obj.constructor === Array || typeof _obj.callee !== 'undefined')
-         {
-            str = '[';
-            var i, len = _obj.length;
-            for (i = 0; i < len-1; i++) { str += serialize(_obj[i]) + ','; }
-            str += serialize(_obj[i]) + ']';
-         }
-         else
-         {
-            str = '{';
-            var key;
-            for (key in _obj) { str += key + ':' + serialize(_obj[key]) + ','; }
-            str = str.replace(/\,$/, '') + '}';
-         }
-         return str;
-         break;
+        case 'object':
+            var str;
+            if (_obj.constructor === Array || typeof _obj.callee !== 'undefined') {
+                str = '[';
+                var i, len = _obj.length;
+                for (i = 0; i < len-1; i++) { str += serialize(_obj[i]) + ','; }
+                str += serialize(_obj[i]) + ']';
+            }
+            else {
+                str = '{';
+                var key;
+                for (key in _obj) { str += key + ':' + serialize(_obj[key]) + ','; }
+                str = str.replace(/\,$/, '') + '}';
+            }
+            return str;
+            break;
 
-      default:
-         return 'UNKNOWN';
-         break;
-   }
+        default:
+            return 'UNKNOWN';
+            break;
+    }
 }
 
