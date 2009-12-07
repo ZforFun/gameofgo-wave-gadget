@@ -156,8 +156,10 @@ Game.prototype.setStone = function(i, j, color, last) {
 
 Game.prototype.renderBoardAbstract_ = function() {
     if(this.isInWave()) {
-        if(this.saveStateToWave()) ;
+        var saveSuccessful = this.saveStateToWave() ; 
+        if(saveSuccessful) {
             this.setWaitAnimation(true) ;
+        }
     } else {
         this.renderBoard() ;
     }
