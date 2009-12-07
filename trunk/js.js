@@ -276,7 +276,7 @@ Game.prototype.saveStateToWave = function() {
     var oldSaved = wave.getState().get('gameBoard') ;
     
     if(oldSaved != toBeSaved) {
-        wave.getState().submitDelta({'gameBoard': saved}) ;
+        wave.getState().submitDelta({'gameBoard': toBeSaved}) ;
         return true ;
     }
     else {
