@@ -273,7 +273,7 @@ Game.prototype.saveStateToWave = function() {
     
     var saved = this.gameBoard ;
     saved = serialize(saved) ;
-    if(typeof console !="undefine") console.debug("Sending Data to Wave: " + saved.length) ;
+    if(typeof console != "undefined") console.debug("Sending Data to Wave: " + saved.length) ;
         
     wave.getState().submitDelta({'gameBoard': saved}) ;
 }
