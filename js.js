@@ -156,8 +156,8 @@ Game.prototype.setStone = function(i, j, color, last) {
 
 Game.prototype.renderBoardAbstract_ = function() {
     if(this.isInWave()) {
-        this.saveStateToWave() ;
-        this.setWaitAnimation(true) ;
+        if(this.saveStateToWave()) ;
+            this.setWaitAnimation(true) ;
     } else {
         this.renderBoard() ;
     }
@@ -271,11 +271,17 @@ Game.prototype.importFromSGF = function(strSGF) {
 Game.prototype.saveStateToWave = function() {
     if(typeof wave == 'undefined') return ;
     
-    var saved = this.gameBoard ;
-    saved = serialize(saved) ;
-    if(typeof console != "undefined") console.debug("Sending Data to Wave: " + saved.length) ;
-        
-    wave.getState().submitDelta({'gameBoard': saved}) ;
+    var toBeSaved = serialize(this.gameBoard) ;
+    if(typeof console != "undefined") console.debug("Sending Data to Wave: " + toBeSaved.length) ;
+    var oldSaved = wave.getState().get('gameBoard') ;
+    
+    if(oldSaved != toBeSaved) {
+        wave.getState().submitDelta({'gameBoard': saved}) ;
+        return true ;
+    }
+    else {
+        return false ;
+    }
 }
 
 Game.prototype.restoreStateFromWave = function() {
