@@ -47,15 +47,12 @@
            prefs.set('themeUrl', themeUrl) ;
            game.changeTheme(themeUrl);
         }
-        function stateUpdated() {
-            game.restoreStateFromWave();
-            game.setWaitAnimation(false);
-            game.renderBoard() ;
-        }
         
         function init(){
           if (wave && wave.isInWaveContainer()) {
-            wave.setStateCallback(stateUpdated);
+            wave.setStateCallback(function() {
+                game.onWaveStateChange() ;
+            });
           }
         }
 

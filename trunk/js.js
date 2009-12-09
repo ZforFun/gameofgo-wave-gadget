@@ -4,6 +4,7 @@
 
 function Game(div, themeUrl) {
     this.div = div ;
+    this.state = 0 ; // 1->wave callback happened 2->board UI downloaded 
 }
 
 Game.prototype.changeTheme = function (themeUrl) {
@@ -37,6 +38,7 @@ Game.prototype.initializeAppearance = function(boardImageUrl,
     this.boardGeometry = boardGeometry ;
     this.stoneGeometry = stoneGeometry ;
 
+    this.state |= 2 ;
 }
 
 Game.prototype.onThemeChange = function(boardImageUrl, 
@@ -50,7 +52,12 @@ Game.prototype.onThemeChange = function(boardImageUrl,
                               boardSize,
                               boardGeometry, stoneGeometry) ;
     this.resetBoardUI() ;
-    this.renderBoard() ;
+
+    if(this.state == 3) {
+        this.restoreStateFromWave();
+        this.setWaitAnimation(false);
+        this.renderBoard() ;
+    }
 }
 
 Game.prototype.resetBoardUI = function() {
@@ -347,6 +354,16 @@ Game.prototype._resizeWaitAnimationDiv = function() {
 
 Game.prototype.isInWave = function() {
     return typeof wave != "undefined" ;
+}
+
+Game.prototype.onWaveStateChange = function() {
+    this.state |= 1;
+
+    if(this.state == 3) {
+        this.restoreStateFromWave();
+        this.setWaitAnimation(false);
+        this.renderBoard() ;
+    }
 }
 
 // ----------------------------------------------------------
