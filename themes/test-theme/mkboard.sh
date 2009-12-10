@@ -8,6 +8,7 @@ BOARD_VERTICAL_GAP=32
 BOARD_SIZE=19
 BOARD_FILENAME=board.png
 BOARD_BACKGROUND_COLOR="#FF4600"
+STARPOINT_SIZE=4
 
 STONE_SIZE=24
 BLACK_STONE_FILENAME=black.png
@@ -61,4 +62,13 @@ while [ "$i" -le "$j" ]; do
 done
 
 # Draw the handicap points
-# TODO:
+i=0
+while [ "$i" -le "2" ]; do
+  j=0
+  while [ "$j" -le "2" ]; do
+    echo "Starpoint: $i, $j"
+    mogrify -draw "circle $((BOARD_LEFT_OFFSET+$((i*6+3))*BOARD_HORIZONTAL_GAP)),$((BOARD_TOP_OFFSET+$((j*6+3))*BOARD_VERTICAL_GAP)),$((BOARD_LEFT_OFFSET+$((i*6+3))*BOARD_HORIZONTAL_GAP+STARPOINT_SIZE)),$((BOARD_TOP_OFFSET+$((j*6+3))*BOARD_VERTICAL_GAP))" "$BOARD_FILENAME"
+    j=$((j+1))
+  done
+  i=$((i+1))
+done
