@@ -35,9 +35,7 @@ Although go has only a few, simple rules, there are slight differences between r
 
   * Rule 7A. Prohibition of suicide: A play is illegal if one or more stones would be removed in Step 3 of that play.
 
-  * Rule 8. Prohibition of repetition: A play is illegal if it would have the effect (after all steps of the play have been completed) of creating a position that has occurred previously in the game.
-
-*This has to be replaced by a simple ko rule!*
+  * Rule 8. (Ko rule) One may not capture just one stone, if that stone was played on the previous move, and that move also captured just one stone.
 
 ==End==
 
