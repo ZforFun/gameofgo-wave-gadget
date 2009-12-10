@@ -1,3 +1,9 @@
+function LOG(p) {
+    if(typeof console != "undefined" && console.debug) {
+        console.debug(p) ;
+    }
+}
+
 // ----------------------------------------------------------
 // ----- Class: Game ----------------------------------------
 // ----------------------------------------------------------
@@ -280,7 +286,7 @@ Game.prototype.importFromSGF = function(strSGF) {
 Game.prototype.saveStateToWave = function() {
     if(typeof wave == 'undefined') return ;
     
-    var toBeSaved = serialize(this.gameBoard) ;
+    var toBeSaved = wave.util.printJson(this.gameBoard) ;
     if(typeof console != "undefined") console.debug("Sending Data to Wave: " + toBeSaved.length) ;
     var oldSaved = wave.getState().get('gameBoard') ;
     
@@ -1263,3 +1269,22 @@ function serialize(_obj)
     }
 }
 
+function LogViewController(parent) {
+    this.log = null ;
+    this.div = null ;
+    this.parent = parent ;
+}
+
+LogViewController.prototype.setLog = function(log) {
+    this.log = log ;
+}
+
+LogViewController.prototype.resetUI = function() {
+    if(this.div) {
+        this.parent.removeChild(this.div) ;
+    }
+    
+    this.div = document.createElement("DIV");
+    var table = document.createElement("TABLE") ;
+    var tbody = document.createElement("TBODY") ;
+}
