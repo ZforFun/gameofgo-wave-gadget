@@ -1,6 +1,5 @@
-#summary One-sentence summary of this page.
-
-Idea for a shorter text representation of board.
+#summary Idea for a shorter text representation of board.
+#labels Phase-Design
 
 = Details =
 
@@ -25,5 +24,3 @@ boardSize*boardSize*2bits
 == Representation of the log ==
 Each entry has 2bits of type, 1bit of color, 6bits of x coord, 6bity of y coord.
 -> 1 unicode character per log entry.
-
-
