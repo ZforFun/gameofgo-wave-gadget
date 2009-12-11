@@ -1,4 +1,4 @@
-#summary To do list
+#summary To do list - deprecated doc, use the issue list instead
 #labels Phase-Requirements
 
 = Introduction =
