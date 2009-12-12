@@ -285,8 +285,10 @@ Game.prototype.importFromSGF = function(strSGF) {
 
 Game.prototype.saveStateToWave = function() {
     if(typeof wave == 'undefined') return ;
-    
-    var toBeSaved = wave.util.printJson(this.gameBoard) ;
+
+    var toBeSaved = serialize(this.gameBoard) ; //wave.util.printJson(this.gameBoard) ;
+
+
     if(typeof console != "undefined") console.debug("Sending Data to Wave: " + toBeSaved.length) ;
     var oldSaved = wave.getState().get('gameBoard') ;
     
@@ -301,7 +303,7 @@ Game.prototype.saveStateToWave = function() {
 
 Game.prototype.restoreStateFromWave = function() {
     if(!wave) return ;
-    
+
     var saved = wave.getState().get('gameBoard') ;
     if(!saved) return ;
 
