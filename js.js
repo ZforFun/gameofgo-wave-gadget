@@ -169,7 +169,7 @@ Game.prototype.setStone = function(i, j, color, last) {
 
 Game.prototype.renderBoardAbstract_ = function() {
     if(this.isInWave()) {
-        var saveSuccessful = this.saveStateToWave() ; 
+        var saveSuccessful = this.saveStateToWave() ;
         if(saveSuccessful) {
             this.setWaitAnimation(true) ;
         }
@@ -387,9 +387,9 @@ function GameLogEntry(type, i, j, color) {
 }
 
 GameLogEntry.restoreFromUnstructuredData = function(data) {
-    var rv = 
+    var rv =
         new GameLogEntry(data.type, data.i, data.j, data.color) ;
-        
+
     if(data.followup) {
         rv.followup = data.followup.slice(0) ;
     }
@@ -409,6 +409,13 @@ GameLogEntry.prototype.addFollowup = function(i, j) {
     this.followup.push({'i':i, 'j':j}) ;
 }
 
+GameLogEntry.prototype.getFollowupNumber = function() {
+    if (!this.followup) {
+        return 0;
+    } else {
+        return this.followup.length;
+    }
+}
 
 // ----------------------------------------------------------
 // ----- Class: GameLog -------------------------------------
@@ -537,6 +544,12 @@ function GameBoard(boardSize) {
     this.gameLog = new GameLog() ;
     this.numberOfRemovedStones=[];
     this.nextPlayerColor = 1;
+
+//Constants
+    this.MOVE_OK             = 0;
+    this.MOVE_ERROR_OCCUPIED = 1;
+    this.MOVE_ERROR_SUICIDE  = 2;
+    this.MOVE_ERROR_KO       = 3;
 }
 
 // TODO: Update after log update
@@ -559,21 +572,22 @@ GameBoard.prototype.serializeToString = function() {
 // Called to perform a legal Go move.
 // Writes log.
 GameBoard.prototype.makeMove = function (x, y, color) {
-    var moveAllowed = false ;
+    var moveResult = this.MOVE_OK;
 
     // Determine the other color and other color
     if(color == null) {
         color = this.nextPlayerColor ;
     }
 
-    moveAllowed = this.tryToApplyStepToBoard(x, y, color);
+    moveResult = this.tryToApplyStepToBoard(x, y, color);
 
-    if(!moveAllowed) {
+    if(moveResult != this.MOVE_OK) {
         this.undo(/*trimLog=*/true) ;
-        return false ;
+        alert("Wrong move. Error code: "+moveResult+".\n(1:Alr.Occ; 2:Suicide; 3:Ko)");
+        return moveResult ;
     }
-    
-    return moveAllowed ;
+
+    return moveResult ;
 }
 
 // Public:
@@ -594,13 +608,13 @@ GameBoard.prototype.removeStone = function(i, j, noLog) {
     if(!color) {
         return false ;
     }
-    
+
     this.board[i*this.boardSize+j]=null ;
     this.numberOfRemovedStones[color-1]++ ;
     if(!noLog) {
         this.gameLog.addFollowup(i, j) ;
     }
-    
+
     true ;
 }
 
@@ -646,48 +660,65 @@ GameBoard.prototype.pass = function(color, noLog) {
 // Protected:
 GameBoard.prototype.tryToApplyStepToBoard = function(x, y, color) {
     if(!this.putStone(x, y, color)) {
-        return false ;
+        return this.MOVE_ERROR_OCCUPIED ;
     }
-        
+
     var otherColor = 1;
     if(color == 1) otherColor = 2 ;
-    
+
     // Check if this move removes anything:
     var neighbours  = this.getNeighbours(x, y, otherColor) ;
-    var moveAllowed = false ;
-    
+    var moveResult = this.MOVE_ERROR_SUICIDE ;
+    var numberOfRemovedStones = 0;
+
     while(!neighbours.isEmpty()) {
         var neighbour = neighbours.pop() ;
-        
+
         if(neighbour.color != otherColor) continue ;
-        
+
         var shape = new SortedSet(gameBoardStoneComparator) ;
         var lives = new SortedSet(gameBoardStoneComparator) ;
-            
+
         this.walkShape(neighbour.x, neighbour.y, shape, lives) ;
         // There is a shape, and it has only one life (the one we are placing on)
         if(!shape.isEmpty() && lives.isEmpty()) {
+            numberOfRemovedStones += shape.data.length;
             this.removeShape(shape) ;
-            moveAllowed = true ;
+            moveResult = this.MOVE_OK ;
         }
     }
-        
-    if(!moveAllowed) {
+
+    if(moveResult == this.MOVE_ERROR_SUICIDE) {
+//Nothing was removed
         var shape = new SortedSet(gameBoardStoneComparator) ;
         var lives = new SortedSet(gameBoardStoneComparator) ;
         this.walkShape(x, y, shape, lives) ;
         if(!lives.isEmpty()>=1) {
-            moveAllowed = true ;
+            moveResult = this.MOVE_OK ;
+        }
+    } else if (numberOfRemovedStones == 1) {
+//Checking simple KO-rule
+        var length = this.gameLog.getLength();
+        if (length>1) {
+            var lastLogEntry       = this.gameLog.getEntry(length-1);
+            var lastButOneLogEntry = this.gameLog.getEntry(length-2);
+            if (lastLogEntry.type == GameLogEntry.TYPE_PUT && lastButOneLogEntry.type == GameLogEntry.TYPE_PUT) {
+                if (lastLogEntry.getFollowupNumber()==1 && lastButOneLogEntry.getFollowupNumber()==1) {
+                    if (lastLogEntry.i == lastButOneLogEntry.followup[0].i && lastLogEntry.j == lastButOneLogEntry.followup[0].j) {
+                        moveResult = this.MOVE_ERROR_KO ;
+                    }
+                }
+            }
         }
     }
-    
-    return moveAllowed ;
+
+    return moveResult ;
 }
 
 // Protected:
 GameBoard.prototype.getNeighbours = function(x, y) {
     var rv = new SortedSet(gameBoardStoneComparator) ;
-    
+
     var xx = x-1
     var yy = y ;
     var color = this.getField(xx, yy);
@@ -768,8 +799,8 @@ GameBoard.prototype.getField = function (x, y) {
 
 GameBoard.prototype.isLast = function (i, j) {
     var last = this.gameLog.lastEntry() ;
-    return last && 
-           (last.type == GameLogEntry.TYPE_PUT || 
+    return last &&
+           (last.type == GameLogEntry.TYPE_PUT ||
             last.type == GameLogEntry.TYPE_SET) &&
            last.i == i && last.j == j ;
 }
