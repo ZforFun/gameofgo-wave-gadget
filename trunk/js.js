@@ -286,8 +286,8 @@ Game.prototype.importFromSGF = function(strSGF) {
 Game.prototype.saveStateToWave = function() {
     if(typeof wave == 'undefined') return ;
 
-    var toBeSaved = serialize(this.gameBoard) ; //wave.util.printJson(this.gameBoard) ;
-
+    var s = new SimpleSerializer(this.gameBoard) ;
+    var toBeSaved = s.serialize() ;
 
     if(typeof console != "undefined") console.debug("Sending Data to Wave: " + toBeSaved.length) ;
     var oldSaved = wave.getState().get('gameBoard') ;
@@ -307,10 +307,10 @@ Game.prototype.restoreStateFromWave = function() {
     var saved = wave.getState().get('gameBoard') ;
     if(!saved) return ;
 
-    var arr = null ;
-    eval("arr = "+saved) ;
+    var p = new SimpleParser(saved) ;
+    this.gameBoard = p.construct() ;
     
-    this.gameBoard = GameBoard.restoreFromUnstructuredData(arr) ;
+    // this.gameBoard = GameBoard.restoreFromUnstructuredData(arr) ;
     // this.setWaitAnimation(false) ;
     // this.renderBoard() ;
 }
@@ -544,13 +544,13 @@ function GameBoard(boardSize) {
     this.gameLog = new GameLog() ;
     this.numberOfRemovedStones=[];
     this.nextPlayerColor = 1;
+}
 
 //Constants
-    this.MOVE_OK             = 0;
-    this.MOVE_ERROR_OCCUPIED = 1;
-    this.MOVE_ERROR_SUICIDE  = 2;
-    this.MOVE_ERROR_KO       = 3;
-}
+GameBoard.MOVE_OK             = 0 ;
+GameBoard.MOVE_ERROR_OCCUPIED = 1 ;
+GameBoard.MOVE_ERROR_SUICIDE  = 2 ;
+GameBoard.MOVE_ERROR_KO       = 3 ;
 
 // TODO: Update after log update
 GameBoard.restoreFromUnstructuredData = function(data) {
@@ -572,7 +572,7 @@ GameBoard.prototype.serializeToString = function() {
 // Called to perform a legal Go move.
 // Writes log.
 GameBoard.prototype.makeMove = function (x, y, color) {
-    var moveResult = this.MOVE_OK;
+    var moveResult = GameBoard.MOVE_OK;
 
     // Determine the other color and other color
     if(color == null) {
@@ -581,7 +581,7 @@ GameBoard.prototype.makeMove = function (x, y, color) {
 
     moveResult = this.tryToApplyStepToBoard(x, y, color);
 
-    if(moveResult != this.MOVE_OK) {
+    if(moveResult != GameBoard.MOVE_OK) {
         this.undo(/*trimLog=*/true) ;
         alert("Wrong move. Error code: "+moveResult+".\n(1:Alr.Occ; 2:Suicide; 3:Ko)");
         return moveResult ;
@@ -660,7 +660,7 @@ GameBoard.prototype.pass = function(color, noLog) {
 // Protected:
 GameBoard.prototype.tryToApplyStepToBoard = function(x, y, color) {
     if(!this.putStone(x, y, color)) {
-        return this.MOVE_ERROR_OCCUPIED ;
+        return GameBoard.MOVE_ERROR_OCCUPIED ;
     }
 
     var otherColor = 1;
@@ -668,7 +668,7 @@ GameBoard.prototype.tryToApplyStepToBoard = function(x, y, color) {
 
     // Check if this move removes anything:
     var neighbours  = this.getNeighbours(x, y, otherColor) ;
-    var moveResult = this.MOVE_ERROR_SUICIDE ;
+    var moveResult = GameBoard.MOVE_ERROR_SUICIDE ;
     var numberOfRemovedStones = 0;
 
     while(!neighbours.isEmpty()) {
@@ -684,17 +684,17 @@ GameBoard.prototype.tryToApplyStepToBoard = function(x, y, color) {
         if(!shape.isEmpty() && lives.isEmpty()) {
             numberOfRemovedStones += shape.data.length;
             this.removeShape(shape) ;
-            moveResult = this.MOVE_OK ;
+            moveResult = GameBoard.MOVE_OK ;
         }
     }
 
-    if(moveResult == this.MOVE_ERROR_SUICIDE) {
+    if(moveResult == GameBoard.MOVE_ERROR_SUICIDE) {
 //Nothing was removed
         var shape = new SortedSet(gameBoardStoneComparator) ;
         var lives = new SortedSet(gameBoardStoneComparator) ;
         this.walkShape(x, y, shape, lives) ;
         if(!lives.isEmpty()>=1) {
-            moveResult = this.MOVE_OK ;
+            moveResult = GameBoard.MOVE_OK ;
         }
     } else if (numberOfRemovedStones == 1) {
 //Checking simple KO-rule
@@ -705,7 +705,7 @@ GameBoard.prototype.tryToApplyStepToBoard = function(x, y, color) {
             if (lastLogEntry.type == GameLogEntry.TYPE_PUT && lastButOneLogEntry.type == GameLogEntry.TYPE_PUT) {
                 if (lastLogEntry.getFollowupNumber()==1 && lastButOneLogEntry.getFollowupNumber()==1) {
                     if (lastLogEntry.i == lastButOneLogEntry.followup[0].i && lastLogEntry.j == lastButOneLogEntry.followup[0].j) {
-                        moveResult = this.MOVE_ERROR_KO ;
+                        moveResult = GameBoard.MOVE_ERROR_KO ;
                     }
                 }
             }
@@ -1321,3 +1321,312 @@ LogViewController.prototype.resetUI = function() {
     var table = document.createElement("TABLE") ;
     var tbody = document.createElement("TBODY") ;
 }
+
+function SimpleSerializer(board) {
+    this.board_ = board ;
+}
+
+SimpleSerializer.indexToCode = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 
+                                'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 
+                                'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+                                'u', 'v', 'w', 'x', 'y', 'z'] ;
+
+SimpleSerializer.prototype.serialize = function() {
+    var d = {} ;
+    var l = {} ;
+
+    d.boardSize = this.board_.boardSize ;
+    d.nextPlayerColor = this.board_.nextPlayerColor ;
+    d.gameLog = l ;
+
+    l.log = "" ;
+    l.logLength = this.board_.gameLog.logLength ;
+    
+    var log = this.board_.gameLog.log ;
+    var c ;
+    var a, b ;
+    for(var i=0; i<log.length; i++) {
+        var entry = log[i] ;
+        switch(entry.type) {
+            case GameLogEntry.TYPE_PASS:
+                c = '<' ;
+                if(entry.color == 2) c = '>' ;
+                l.log += c ;
+                break ;
+            case GameLogEntry.TYPE_PUT:
+                c = '{' ;
+                if(entry.color == 2) c = '}' ;
+                l.log += c ;
+                l.log += SimpleSerializer.indexToCode[entry.i] ;
+                l.log += SimpleSerializer.indexToCode[entry.j] ;
+                break ;
+            case GameLogEntry.TYPE_REMOVE:
+                c = '[' ;
+                if(entry.color == 2) c = ']' ;
+                l.log += c ;
+                l.log += SimpleSerializer.indexToCode[entry.i] ;
+                l.log += SimpleSerializer.indexToCode[entry.j] ;
+                break ;
+            case GameLogEntry.TYPE_SET:
+                c = '(' ;
+                if(entry.color == 2) c = ')' ;
+                l.log += c ;
+                l.log += SimpleSerializer.indexToCode[entry.i] ;
+                l.log += SimpleSerializer.indexToCode[entry.j] ;
+                break ;
+        }
+        
+        if(entry.followup) {
+            for(var j=0; j<entry.followup.length; j++) {
+                l.log += SimpleSerializer.indexToCode[entry.followup[j].i] ;
+                l.log += SimpleSerializer.indexToCode[entry.followup[j].j] ;
+            }
+        }
+    }
+    
+    var rv = wave.util.printJson(d) ;
+    
+    return rv ;
+}
+
+
+function SimpleParser(data) {
+    this.data_ = data ;
+}
+
+SimpleParser.codeToIndex = {'0':0,  '1':1,  '2':2,  '3':3,  '4':4, 
+                            '5':5,  '6':6,  '7':7,  '8':8,  '9':9, 
+                            'a':10, 'b':11, 'c':12, 'd':13, 'e':14, 
+                            'f':15, 'g':16, 'h':17, 'i':18, 'j':19, 
+                            'k':20, 'l':21, 'm':22, 'n':23, 'o':24, 
+                            'p':25, 'q':26, 'r':27, 's':28, 't':29,
+                            'u':30, 'v':31, 'w':32, 'x':33, 'y':34, 
+                            'z':35} ;
+
+SimpleParser.prototype.construct = function() {
+    var d = eval( '('+this.data_+')' );
+    var gameBoard = new GameBoard(d.boardSize) ;
+    
+    var log = new GameLog() ;
+    var index = 0;
+    var l = d.gameLog ;
+    var c = l.log[index++] ;
+    while(index<=l.log.length) {
+        var i, j, color, type ;
+        if(c == '<' || c == '>') {
+            type = GameLogEntry.TYPE_PASS ;
+            color = 1 ;
+            if(c=='>') color = 2 ;
+            c = l.log[index++] ;
+        }
+        else if(c == '{' || c == '}') {
+            type = GameLogEntry.TYPE_PUT ;
+            color = 1 ;
+            if(c=='}') color = 2 ;
+            c = l.log[index++] ;
+            i = SimpleParser.codeToIndex[c] ;
+            c = l.log[index++] ;
+            j = SimpleParser.codeToIndex[c] ;
+            c = l.log[index++] ;
+        }
+        else if(c == '[' || c == ']') {
+            type = GameLogEntry.TYPE_REMOVE ;
+            color = 1 ;
+            if(c==']') color = 2 ;
+            c = l.log[index++] ;
+            i = SimpleParser.codeToIndex[c] ;
+            c = l.log[index++] ;
+            j = SimpleParser.codeToIndex[c] ;
+            c = l.log[index++] ;
+        }
+        else if(c == '(' || c == ')') {
+            type = GameLogEntry.TYPE_SET ;
+            color = 1 ;
+            if(c==')') color = 2 ;
+            c = l.log[index++] ;
+            i = SimpleParser.codeToIndex[c] ;
+            c = l.log[index++] ;
+            j = SimpleParser.codeToIndex[c] ;
+            c = l.log[index++] ;
+        }
+        
+        log.addEntry(type, i, j, color) ;
+                
+        while(index<=l.log.length &&
+              c!='<' &&
+              c!='>' &&
+              c!='{' &&
+              c!='}' &&
+              c!='[' &&
+              c!=']' &&
+              c!='(' &&
+              c!=')') {
+            i = SimpleParser.codeToIndex[c] ;
+            c = l.log[index++] ;
+            j = SimpleParser.codeToIndex[c] ;
+            c = l.log[index++] ;
+            
+            log.addFollowup(i, j) ;
+        }
+    }
+    
+    log.logLength = l.logLength ;
+    gameBoard.applyLog(log) ;
+    gameBoard.nextPlayerColor = d.nextPlayerColor ;
+    
+    return gameBoard ;
+}
+
+
+function BinarySerializer(game) { 
+    this.game_ = game ;
+    this.data_ = "" ;
+}
+
+BinarySerializer.prototype.getData = function() {
+    return this.data_ ;
+}
+
+BinarySerializer.prototype.serializeGameBoard = function(board) {
+    this.data_ += String.fromCharCode(board.boardSize) ;
+    this.data_ += String.fromCharCode(board.board.length) ;
+    
+    for(var i=0; i<board.board.length; i+=4) {
+        var data = 0;
+        for(var j=0; j<4; j++) {
+            var index = i+j ;
+            if(index<board.board.length) {
+                data <<= 4 ;
+                data |= (board.board[index] & 15);
+            }
+        }
+        this.data_ += String.fromCharCode(data) ;
+    }
+    
+    this.serializeGameLog(board.gameLog) ; 
+    this.data_ += String.fromCharCode(board.numberOfRemovedStones[0]);    
+    this.data_ += String.fromCharCode(board.numberOfRemovedStones[1]);    
+    this.data_ += String.fromCharCode(board.nextPlayerColor);   
+    
+    return this.data_ ;
+}
+
+BinarySerializer.prototype.serializeGameLog = function(log) {
+    this.data_ += String.fromCharCode(log.log.length) ;
+    this.data_ += String.fromCharCode(log.logLength) ;
+    for(var i=0; i<log.log.length; i++) {
+        this.serializeGameLogEntry(log.log[i]) ;
+    }
+}
+
+BinarySerializer.prototype.serializeGameLogEntry = function(entry) {
+    var rv ;
+    if(entry.followup) {
+        rv = 4;
+    }
+
+    rv |= (entry.type-1)%4 ;
+
+    rv <<= 1 ;
+    rv |= (entry.color-1)%2;
+
+    rv <<= 5 ;
+    rv |= (entry.i)%32 ;
+    rv <<= 5;
+    rv |= (entry.j)%32 ;
+    
+    this.data_ += String.fromCharCode(rv) ;
+    
+    if(entry.followup) {
+        this.data_ += String.fromCharCode(entry.followup.length) ;
+        for(var i=0; i<entry.folloup.length; i++) {
+            rv = (entry.followup[i].i*32-1)+(entry.followup[i].j-1) ;
+            this.data_ += String.fromCharCode(rv) ;
+        }
+    }
+}
+
+function BinaryParser(data) {
+    this.data_ = data ;
+    this.index_ = 0 ;
+}
+
+BinaryParser.prototype.constructGameBoard = function() {
+    var board ;
+    var boardSize = this.data_.charCodeAt(this.index_++) ;
+    board = new GameBoard(boardSize) ;
+    var boardArraySize = this.data_.charCodeAt(this.index_++) ;
+
+    for(var i=0; i<boardArraySize; i+=4) {
+        data = this.data_.charCodeAt(this.index_++) ;
+        var d4 = data & 15 ;
+        data >>= 4 ;
+        var d3 = data & 15 ;
+        data >>= 4 ;
+        var d2 = data & 15 ;
+        data >>= 4 ;
+        var d1 = data & 15 ;
+        
+        board.board.push(d1) ;
+        if(i+1<boardArraySize) board.board.push(d2) ;
+        if(i+2<boardArraySize) board.board.push(d3) ;
+        if(i+3<boardArraySize) board.board.push(d4) ;
+    }
+
+    board.gameLog = this.constructGameLog() ;
+
+    board.numberOfRemovedStones[0] = this.data_.charCodeAt(this.index_++) ;
+    board.numberOfRemovedStones[1] = this.data_.charCodeAt(this.index_++) ;
+    board.nextPlayerColor = this.data_.charCodeAt(this.index_++) ;
+    
+    return board ;
+}
+
+BinaryParser.prototype.constructGameLog = function() {
+    var rv = new GameLog();
+    var logTotalLength = this.data_.charCodeAt(this.index_++) ;
+    var logEffectiveLength = this.data_.charCodeAt(this.index_++) ;
+    
+    for(var i=0; i<logTotalLength; i++) {
+        var entry = this.constructGameLogEntry() ;
+        rv.log.push(entry) ;
+    }
+    
+    rv.logLength = logEffectiveLength ;
+    
+    return rv ;
+}
+
+BinaryParser.prototype.constructGameLogEntry = function() {
+    data = this.data_.charCodeAt(this.index_++) ;
+    
+    var j = (data & 31) ;
+    data >>= 5 ;
+    var i = (data & 31) ;
+    data >>= 5 ;
+    var color = (data & 1) ;
+    color += 1 ;
+    data >>= 1 ;
+    var type = (data & 3)
+    type += 1 ;
+    data >> 2 ;
+    
+    var rv = new GameLogEntry(type, i, j, color);
+
+    if(data>0) {
+        var length = this.data_.charCodeAt(this.index_++) ;
+        
+        for(var i=0; i<length; i++) {
+            data = this.data_.charCodeAt(this.index_++) ;
+            j = (data & 31) +1 ;
+            data >>= 5 ;
+            i = (data & 31) +1;
+            rv.addFollowup(j, j) ;
+        }
+    }
+    
+    return rv ;
+}
+
+
+
