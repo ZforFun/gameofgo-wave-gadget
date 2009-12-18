@@ -66,6 +66,19 @@ Game.prototype.onThemeChange = function(boardImageUrl,
     }
 }
 
+Game.prototype.newSimpleGame = function() {
+    // New game...
+    this.gameMode = new SimpleGameMode() ;
+    // ... the one who added the gadget plays black
+    this.gameMode.setPlayerColor(wave.getHost().getId(), 1) ;
+    // ... and all other players are white
+    this.gameMode.setPlayerColor("*", 2) ;
+    
+    // Make sure the board is clear, and state is saved to the Wave...
+    this.reset() ;
+    this.saveStateToWave() ;
+}
+
 Game.prototype.resetBoardUI = function() {
     var i, j ;
 
@@ -179,6 +192,8 @@ Game.prototype.renderBoardAbstract_ = function() {
 }
 
 Game.prototype.onClickOnBoard = function(event) {
+    if(this.state != 3) return ;
+
     var x, y ;
 
     if(event.offsetX) {
@@ -202,7 +217,12 @@ Game.prototype.onClickOnBoard = function(event) {
         return ;
     }
 
-    this.gameBoard.makeMove(i, j) ;
+    if(!this.gameMode) return ;
+    
+    if(!this.gameMode.isParticipantTurn(wave.getViewer().getId(), this.gameBoard.nextPlayerColor))
+        return ;
+        
+    this.gameBoard.makeMove(i, j, this.gameBoard.nextPlayerColor) ;
     this.renderBoardAbstract_();
 }
 
@@ -285,34 +305,49 @@ Game.prototype.importFromSGF = function(strSGF) {
 
 Game.prototype.saveStateToWave = function() {
     if(typeof wave == 'undefined') return ;
+    
+    var delta = {} ;
+    var change = false ;
+    
+    // Transmit board
 
     var s = new SimpleSerializer(this.gameBoard) ;
-    var toBeSaved = s.serialize() ;
-
-    if(typeof console != "undefined") console.debug("Sending Data to Wave: " + toBeSaved.length) ;
-    var oldSaved = wave.getState().get('gameBoard') ;
+    var newBoard = s.serialize() ;
+    var oldBoard = wave.getState().get('gameBoard') ;
+    if(newBoard != oldBoard) {
+        delta['gameBoard'] = newBoard ;
+        change = true ;
+    }
     
-    if(oldSaved != toBeSaved) {
-        wave.getState().submitDelta({'gameBoard': toBeSaved}) ;
-        return true ;
+    if(this.gameMode) {
+        var newGameMode = GameMode.serialize(this.gameMode) ;
+        var oldGameMode = wave.getState().get('gameMode') ;
+        if(newGameMode != oldGameMode) {
+            delta['gameMode'] = newGameMode ;
+            change = true ;
+        }
     }
-    else {
-        return false ;
+
+    if(change) {
+        wave.getState().submitDelta(delta) ;
     }
+    
+    return change ;
 }
 
 Game.prototype.restoreStateFromWave = function() {
     if(!wave) return ;
 
-    var saved = wave.getState().get('gameBoard') ;
-    if(!saved) return ;
-
-    var p = new SimpleParser(saved) ;
-    this.gameBoard = p.construct() ;
+    var gameBoard = wave.getState().get('gameBoard') ;
+    if(gameBoard) {
+        var p = new SimpleParser(gameBoard) ;
+        this.gameBoard = p.construct() ;
+    }
     
-    // this.gameBoard = GameBoard.restoreFromUnstructuredData(arr) ;
-    // this.setWaitAnimation(false) ;
-    // this.renderBoard() ;
+    var gameMode = wave.getState().get('gameMode') ;
+    if(gameMode) {
+        this.gameMode = GameMode.construct(gameMode) ;
+    }
 }
 
 Game.prototype.setWaitAnimation = function(on) {
@@ -1322,6 +1357,10 @@ LogViewController.prototype.resetUI = function() {
     var tbody = document.createElement("TBODY") ;
 }
 
+// ----------------------------------------------------------
+// ----- Class: SimpleSerializer ----------------------------
+// ----------------------------------------------------------
+
 function SimpleSerializer(board) {
     this.board_ = board ;
 }
@@ -1389,6 +1428,9 @@ SimpleSerializer.prototype.serialize = function() {
     return rv ;
 }
 
+// ----------------------------------------------------------
+// ----- Class: SimpleParser --------------------------------
+// ----------------------------------------------------------
 
 function SimpleParser(data) {
     this.data_ = data ;
@@ -1477,156 +1519,65 @@ SimpleParser.prototype.construct = function() {
     return gameBoard ;
 }
 
-
-function BinarySerializer(game) { 
-    this.game_ = game ;
-    this.data_ = "" ;
+function GameMode() {
 }
 
-BinarySerializer.prototype.getData = function() {
-    return this.data_ ;
+GameMode.serialize = function(mode) {
+    var gameModeData = {mode: mode.getMode(), data: mode.getData()};
+    var str = wave.util.printJson(gameModeData) ;
+    return str ;
 }
 
-BinarySerializer.prototype.serializeGameBoard = function(board) {
-    this.data_ += String.fromCharCode(board.boardSize) ;
-    this.data_ += String.fromCharCode(board.board.length) ;
-    
-    for(var i=0; i<board.board.length; i+=4) {
-        var data = 0;
-        for(var j=0; j<4; j++) {
-            var index = i+j ;
-            if(index<board.board.length) {
-                data <<= 4 ;
-                data |= (board.board[index] & 15);
-            }
-        }
-        this.data_ += String.fromCharCode(data) ;
-    }
-    
-    this.serializeGameLog(board.gameLog) ; 
-    this.data_ += String.fromCharCode(board.numberOfRemovedStones[0]);    
-    this.data_ += String.fromCharCode(board.numberOfRemovedStones[1]);    
-    this.data_ += String.fromCharCode(board.nextPlayerColor);   
-    
-    return this.data_ ;
+GameMode.construct = function(str) {
+    var gameModeData = eval('('+str+')') ;
+    var gameMode = eval('new '+gameModeData.mode+'(gameModeData.data)') ;
+    return gameMode ;
 }
 
-BinarySerializer.prototype.serializeGameLog = function(log) {
-    this.data_ += String.fromCharCode(log.log.length) ;
-    this.data_ += String.fromCharCode(log.logLength) ;
-    for(var i=0; i<log.log.length; i++) {
-        this.serializeGameLogEntry(log.log[i]) ;
+function SimpleGameMode(pmap) {
+    pmap = pmap || {} ;
+    var uidArr = pmap.uids || [] ;
+    var colorArr = pmap.colors || [] ;
+    
+    this.participantMap_ = {} ;
+    for(var i=0; i<uidArr.length; i++) {
+        var uid = uidArr[i] ;
+        var color = colorArr[i] ;
+        this.participantMap_[uid] = color ;
     }
 }
 
-BinarySerializer.prototype.serializeGameLogEntry = function(entry) {
-    var rv ;
-    if(entry.followup) {
-        rv = 4;
-    }
-
-    rv |= (entry.type-1)%4 ;
-
-    rv <<= 1 ;
-    rv |= (entry.color-1)%2;
-
-    rv <<= 5 ;
-    rv |= (entry.i)%32 ;
-    rv <<= 5;
-    rv |= (entry.j)%32 ;
-    
-    this.data_ += String.fromCharCode(rv) ;
-    
-    if(entry.followup) {
-        this.data_ += String.fromCharCode(entry.followup.length) ;
-        for(var i=0; i<entry.folloup.length; i++) {
-            rv = (entry.followup[i].i*32-1)+(entry.followup[i].j-1) ;
-            this.data_ += String.fromCharCode(rv) ;
-        }
-    }
+SimpleGameMode.prototype.getMode = function() {
+    return "SimpleGameMode" ;
 }
 
-function BinaryParser(data) {
-    this.data_ = data ;
-    this.index_ = 0 ;
-}
-
-BinaryParser.prototype.constructGameBoard = function() {
-    var board ;
-    var boardSize = this.data_.charCodeAt(this.index_++) ;
-    board = new GameBoard(boardSize) ;
-    var boardArraySize = this.data_.charCodeAt(this.index_++) ;
-
-    for(var i=0; i<boardArraySize; i+=4) {
-        data = this.data_.charCodeAt(this.index_++) ;
-        var d4 = data & 15 ;
-        data >>= 4 ;
-        var d3 = data & 15 ;
-        data >>= 4 ;
-        var d2 = data & 15 ;
-        data >>= 4 ;
-        var d1 = data & 15 ;
-        
-        board.board.push(d1) ;
-        if(i+1<boardArraySize) board.board.push(d2) ;
-        if(i+2<boardArraySize) board.board.push(d3) ;
-        if(i+3<boardArraySize) board.board.push(d4) ;
+SimpleGameMode.prototype.getData = function() {
+    var uidArr = [] ;
+    var colorArr = [] ;
+    for(var i in this.participantMap_) {
+        uidArr.push(i) ;
+        colorArr.push(this.participantMap_[i]) ;
     }
-
-    board.gameLog = this.constructGameLog() ;
-
-    board.numberOfRemovedStones[0] = this.data_.charCodeAt(this.index_++) ;
-    board.numberOfRemovedStones[1] = this.data_.charCodeAt(this.index_++) ;
-    board.nextPlayerColor = this.data_.charCodeAt(this.index_++) ;
-    
-    return board ;
+    return {uids: uidArr, colors: colorArr} ;
 }
 
-BinaryParser.prototype.constructGameLog = function() {
-    var rv = new GameLog();
-    var logTotalLength = this.data_.charCodeAt(this.index_++) ;
-    var logEffectiveLength = this.data_.charCodeAt(this.index_++) ;
-    
-    for(var i=0; i<logTotalLength; i++) {
-        var entry = this.constructGameLogEntry() ;
-        rv.log.push(entry) ;
+SimpleGameMode.prototype.setPlayerColor = function(participantId, color) {    
+    if(!color) delete this.participantMap_[participantId] ;
+    else this.participantMap_[participantId] = color ;
+}
+
+SimpleGameMode.prototype.getPlayerColor = function(participantId) {
+    var color = this.participantMap_[participantId] ;
+    if(color) {
+        return color ;
     }
-    
-    rv.logLength = logEffectiveLength ;
-    
-    return rv ;
+    return this.participantMap_["*"] ;
 }
 
-BinaryParser.prototype.constructGameLogEntry = function() {
-    data = this.data_.charCodeAt(this.index_++) ;
+SimpleGameMode.prototype.isParticipantTurn = function(participantId, color) {
+    var playerColor = this.getPlayerColor(participantId) ;
+    if(playerColor == color) return true ;
+    if(playerColor == "*") return true ;
     
-    var j = (data & 31) ;
-    data >>= 5 ;
-    var i = (data & 31) ;
-    data >>= 5 ;
-    var color = (data & 1) ;
-    color += 1 ;
-    data >>= 1 ;
-    var type = (data & 3)
-    type += 1 ;
-    data >> 2 ;
-    
-    var rv = new GameLogEntry(type, i, j, color);
-
-    if(data>0) {
-        var length = this.data_.charCodeAt(this.index_++) ;
-        
-        for(var i=0; i<length; i++) {
-            data = this.data_.charCodeAt(this.index_++) ;
-            j = (data & 31) +1 ;
-            data >>= 5 ;
-            i = (data & 31) +1;
-            rv.addFollowup(j, j) ;
-        }
-    }
-    
-    return rv ;
+    return false ;
 }
-
-
-
