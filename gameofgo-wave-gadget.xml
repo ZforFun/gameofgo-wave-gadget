@@ -20,7 +20,8 @@
       <div id="main_div" style="position:relative">
         <table>
           <tr id="settings">
-             <td><a href="" onclick="game.newSimpleGame();return false;"><b>New Game</b></a></td>
+             <td><a href="" onclick="game.newSimpleGame();return false;"><b>New Game (alternating players)</b></a></td>
+             <td><a href="" onclick="game.newAllPlayersCanPlayGame();return false;"><b>New Game (all players move)</b></a></td>
              <td><a href="" onclick="game.gotoFirstStep();return false;">First</a></td>
              <td><a href="" onclick="game.undo();return false;">Undo</a></td>
              <td><a href="" onclick="game.redo();return false;">Redo</a></td>
