@@ -79,6 +79,15 @@ Game.prototype.newSimpleGame = function() {
     this.saveStateToWave() ;
 }
 
+Game.prototype.newAllPlayersCanPlayGame = function() {
+    this.gameMode = new SimpleGameMode() ;
+    this.gameMode.setPlayerColor("*", "*") ;
+    
+    // Make sure the board is clear, and state is saved to the Wave...
+    this.reset() ;
+    this.saveStateToWave() ;
+}
+
 Game.prototype.resetBoardUI = function() {
     var i, j ;
 
