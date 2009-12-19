@@ -1231,7 +1231,7 @@ ThemeManager.prototype.processStoneItem = function(stone) {
                 this.whiteLastStoneImageUrl += item.firstChild.nodeValue ;
             }
             else if(typeAttribute=="2-dead"){
-                this.whiteDeadImageUrl += item.firstChild.nodeValue ;
+                this.whiteDeadStoneImageUrl += item.firstChild.nodeValue ;
             }
             if(typeAttribute=="2-terr") {
                 this.whiteTerritoryImageUrl += item.firstChild.nodeValue ;
