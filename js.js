@@ -64,7 +64,7 @@ Game.prototype.onThemeChange = function(boardImageUrl,
                               blackLastStoneImageUrl, whiteLastStoneImageUrl,
                               blackDeadStoneImageUrl, whiteDeadStoneImageUrl,
                               blackTerritoryImageUrl, whiteTerritoryImageUrl,
-			      koImageUrl, boardSize, boardGeometry, stoneGeometry) ;
+                              koImageUrl, boardSize, boardGeometry, stoneGeometry) ;
     this.resetBoardUI() ;
 
     if(this.state == 3) {
@@ -78,9 +78,9 @@ Game.prototype.newSimpleGame = function() {
     // New game...
     this.gameMode = new SimpleGameMode() ;
     // ... the one who added the gadget plays black
-    this.gameMode.setPlayerColor(wave.getHost().getId(), 1) ;
+    this.gameMode.setPlayerColor(wave.getHost().getId(), '1') ;
     // ... and all other players are white
-    this.gameMode.setPlayerColor("*", 2) ;
+    this.gameMode.setPlayerColor("*", '2') ;
     
     // Make sure the board is clear, and state is saved to the Wave...
     this.reset() ;
@@ -93,6 +93,33 @@ Game.prototype.newAllPlayersCanPlayGame = function() {
     
     // Make sure the board is clear, and state is saved to the Wave...
     this.reset() ;
+    this.saveStateToWave() ;
+}
+
+Game.prototype.openGameModeUI = function() {
+    var self = this ;
+    if(!this.gameMode) {
+        this.gameMode = new SimpleGameMode() ;
+    }
+    if(!this.gameModeController) {
+        this.gameModeController = new GameModeController(this, this.div) ;
+    }
+    this.gameModeController.resetUI() ;
+    this.gameModeController.setCloseCallback(function() {
+        self.onGameModeChange() ;
+    }) ;
+    this.gameModeController.loadModelData() ;
+    this.gameModeController.setVisible(true) ;
+}
+
+Game.prototype.onGameModeChange = function() {
+    this.gameModeController.setVisible(false) ;
+    var gameMode = this.gameModeController.getGameMode() ;
+    this.setGameMode(gameMode) ;
+}
+
+Game.prototype.setGameMode = function(gameMode) {
+    this.gameMode = gameMode ;
     this.saveStateToWave() ;
 }
 
@@ -165,8 +192,8 @@ Game.prototype.renderBoard = function() {
             var last  = this.gameBoard.isLast(i, j) ;
             var ko    = false ;
             if (this.gameBoard.ko.ko && this.gameBoard.ko.i == i && this.gameBoard.ko.j == j ) {
-    	        ko = true;
-	    }
+                ko = true;
+            }
             this.setStone(i, j, color, last, ko) ;
         }
     }
@@ -194,11 +221,11 @@ Game.prototype.setStone = function(i, j, color, last, ko) {
         }
         visibility = "visible" ;
     } else {
-    	if (ko) {
+        if (ko) {
             src = this.koImageUrl ;
-	    visibility = "visible" ;
+            visibility = "visible" ;
         } else {
-	    visibility = "hidden" ;
+            visibility = "hidden" ;
         }
     }
     
@@ -447,16 +474,6 @@ function GameLogEntry(type, i, j, color) {
     // this.followup = null ;
 }
 
-GameLogEntry.restoreFromUnstructuredData = function(data) {
-    var rv =
-        new GameLogEntry(data.type, data.i, data.j, data.color) ;
-
-    if(data.followup) {
-        rv.followup = data.followup.slice(0) ;
-    }
-    return rv ;
-}
-
 GameLogEntry.TYPE_PUT = 1;
 GameLogEntry.TYPE_REMOVE = 2;
 GameLogEntry.TYPE_SET = 3;
@@ -466,22 +483,13 @@ GameLogEntry.FOLLOWUPTYPE_REMOVE = 1;
 GameLogEntry.FOLLOWUPTYPE_KO   = 2;
 
 
+
 GameLogEntry.prototype.addFollowup = function(type, i, j) {
     if(!this.followup) {
         this.followup = new Array() ;
     }
     this.followup.push({'type':type, 'i':i, 'j':j}) ;
 }
-
-/*
-GameLogEntry.prototype.getFollowupNumber = function() {
-    if (!this.followup) {
-        return 0;
-    } else {
-        return this.followup.length;
-    }
-}
-*/
 
 // ----------------------------------------------------------
 // ----- Class: GameLog -------------------------------------
@@ -490,18 +498,6 @@ GameLogEntry.prototype.getFollowupNumber = function() {
 function GameLog() {
     this.log = new Array() ;
     this.logLength = 0 ;
-}
-
-GameLog.restoreFromUnstructuredData = function(data) {
-    var rv = new GameLog() ;
-    rv.logLength = data.logLength ;
-    
-    for(var i=0; i<data.log.length; i++) {
-        rv.log[i] = 
-            GameLogEntry.restoreFromUnstructuredData(data.log[i]) ;
-    }
-    
-    return rv ;
 }
 
 GameLog.prototype.addEntry = function(type, i, j, color) {
@@ -619,18 +615,6 @@ GameBoard.MOVE_ERROR_OCCUPIED = 1 ;
 GameBoard.MOVE_ERROR_SUICIDE  = 2 ;
 GameBoard.MOVE_ERROR_KO       = 3 ;
 
-// TODO: Update after log update
-GameBoard.restoreFromUnstructuredData = function(data) {
-    var rv = new GameBoard(0) ;
-    rv.board = data.board ;
-    rv.boardSize = data.boardSize ;
-    rv.gameLog = GameLog.restoreFromUnstructuredData(data.gameLog) ;
-    rv.numberOfRemovedStones = data.numberOfRemovedStones ;
-    rv.nextPlayerColor = data.nextPlayerColor ;
-
-    return rv ;
-}
-
 GameBoard.prototype.serializeToString = function() {
     return this.toSource()
 }
@@ -735,10 +719,10 @@ GameBoard.prototype.tryToApplyStepToBoard = function(x, y, color) {
     if(!this.putStone(x, y, color)) {
         return GameBoard.MOVE_ERROR_OCCUPIED ;
     }
-
+    
     if (this.ko.ko && x==this.ko.i && y==this.ko.y) {
         return GameBoard.MOVE_ERROR_KO ;
-    }	
+    } 
 
     var otherColor = 1;
     if(color == 1) otherColor = 2 ;
@@ -761,9 +745,9 @@ GameBoard.prototype.tryToApplyStepToBoard = function(x, y, color) {
         if(!shape.isEmpty() && lives.isEmpty()) {
             numberOfRemovedStones += shape.data.length;
             if (shape.data.length == 1 && numberOfRemovedStones == 1) {
-	      this.ko.i = shape.data[0].x;
-	      this.ko.j = shape.data[0].y;
-	    }
+                this.ko.i = shape.data[0].x;
+                this.ko.j = shape.data[0].y;
+            }
             this.removeShape(shape) ;
             moveResult = GameBoard.MOVE_OK ;
         }
@@ -779,24 +763,6 @@ GameBoard.prototype.tryToApplyStepToBoard = function(x, y, color) {
         }
     } 
 
-/*    
-      else if (numberOfRemovedStones == 1) {
-//Checking simple KO-rule
-        var length = this.gameLog.getLength();
-        if (length>1) {
-            var lastLogEntry       = this.gameLog.getEntry(length-1);
-            var lastButOneLogEntry = this.gameLog.getEntry(length-2);
-            if (lastLogEntry.type == GameLogEntry.TYPE_PUT && lastButOneLogEntry.type == GameLogEntry.TYPE_PUT) {
-                if (lastLogEntry.getFollowupNumber()==1 && lastButOneLogEntry.getFollowupNumber()==1) {
-                    if (lastLogEntry.i == lastButOneLogEntry.followup[0].i && lastLogEntry.j == lastButOneLogEntry.followup[0].j) {
-                        moveResult = GameBoard.MOVE_ERROR_KO ;
-                    }
-                }
-            }
-        }
-    }
-*/
-
 //Determining the forbidden place once a Ko occured (checking the simple ko-rule)
     this.ko.ko = false;
     if (numberOfRemovedStones == 1) {
@@ -805,9 +771,9 @@ GameBoard.prototype.tryToApplyStepToBoard = function(x, y, color) {
         this.walkShape(x, y, shape, lives) ;
         if (shape.data.length == 1 && lives.data.length == 1) {
             this.ko.ko = true;   //ko.x & ko.y is set already above in the while-loop
-            this.gameLog.addFollowup(GameLogEntry.FOLLOWUPTYPE_KO, this.ko.i, this.ko.j) ;	    	
+            this.gameLog.addFollowup(GameLogEntry.FOLLOWUPTYPE_KO, this.ko.i, this.ko.j) ;             
         }
-    }	 
+    }   
 
     return moveResult ;
 }
@@ -914,6 +880,7 @@ GameBoard.prototype.applyLog = function (log, from) {
     for(i=from; i<len; i++) {
         var s = log.getEntry(i) ;
         this.ko.ko = false;
+
         if(s.type == GameLogEntry.TYPE_PASS) {
             this.pass(s.color, true) ;
         }
@@ -929,7 +896,7 @@ GameBoard.prototype.applyLog = function (log, from) {
                 } else if (f.type == GameLogEntry.FOLLOWUPTYPE_KO) {
                     this.ko.i = f.i;
                     this.ko.j = f.j;
-		    this.ko.ko = true;
+                    this.ko.ko = true;
                 }
             }
         }
@@ -1118,6 +1085,7 @@ ThemeManager.prototype.onThemeUrlFetched = function(obj) {
     this.boardImageUrl          = this.url ;
     this.blackStoneImageUrl     = this.url ;
     this.whiteStoneImageUrl     = this.url ;
+
     this.blackLastStoneImageUrl = this.url ;
     this.whiteLastStoneImageUrl = this.url ;
     this.blackDeadStoneImageUrl = this.url ;
@@ -1125,6 +1093,7 @@ ThemeManager.prototype.onThemeUrlFetched = function(obj) {
     this.blackTerritoryImageUrl = this.url ;
     this.whiteTerritoryImageUrl = this.url ;
     this.koImageUrl             = this.url ;
+
 
     // Get root element
     var theme = obj.data.getElementsByTagName("theme").item(0) ;
@@ -1215,13 +1184,13 @@ ThemeManager.prototype.processStoneItem = function(stone) {
             if(typeAttribute=="1") {
                 this.blackStoneImageUrl += item.firstChild.nodeValue ;
             }
-            if(typeAttribute=="1-last") {
+            else if(typeAttribute=="1-last") {
                 this.blackLastStoneImageUrl += item.firstChild.nodeValue ;
             }
-            if(typeAttribute=="1-dead") {
+            else if(typeAttribute=="1-dead") {
                 this.blackDeadStoneImageUrl += item.firstChild.nodeValue ;
             }
-            if(typeAttribute=="1-terr") {
+            else if(typeAttribute=="1-terr") {
                 this.blackTerritoryImageUrl += item.firstChild.nodeValue ;
             }
             else if(typeAttribute=="2"){
@@ -1233,10 +1202,10 @@ ThemeManager.prototype.processStoneItem = function(stone) {
             else if(typeAttribute=="2-dead"){
                 this.whiteDeadStoneImageUrl += item.firstChild.nodeValue ;
             }
-            if(typeAttribute=="2-terr") {
+            else if(typeAttribute=="2-terr") {
                 this.whiteTerritoryImageUrl += item.firstChild.nodeValue ;
             }
-            if(typeAttribute=="ko") {
+            else if(typeAttribute=="ko") {
                 this.koImageUrl += item.firstChild.nodeValue ;
             }
         }
@@ -1432,7 +1401,7 @@ function serialize(_obj)
     }
 }
 
-function LogViewController(parent) {
+function LogViewController(game, parentDiv) {
     this.log = null ;
     this.div = null ;
     this.parent = parent ;
@@ -1450,6 +1419,222 @@ LogViewController.prototype.resetUI = function() {
     this.div = document.createElement("DIV");
     var table = document.createElement("TABLE") ;
     var tbody = document.createElement("TBODY") ;
+}
+
+function GameModeController(game, parentDiv) {
+    this.game = game ;
+    this.parentDiv = parentDiv ;
+    
+    this.div = null ;
+}
+
+GameModeController.prototype.resetUI = function() {
+    if(this.div) this.parentDiv.removeChild(this.div) ;
+    this.div = null ;
+}
+
+GameModeController.prototype.setCloseCallback = function(callback) {
+    this.onCloseCallback = callback ;
+}
+
+GameModeController.prototype.buildUI = function() {
+    var self = this ;
+
+    var closeA = document.createElement("A") ;
+    closeA.innerHTML = "Apply & Close" ;
+    closeA.onclick = function() {
+        self.onClose() ;
+    }
+    
+    this.table = document.createElement("TABLE") ;
+    this.tableBody = document.createElement("TBODY");
+    
+    this.table.appendChild(this.tableBody) ;
+    
+    for(var i=0; i<this.modelData.length; i++) {
+        var tr = document.createElement("TR") ;
+        var url ;
+        var name ;
+        var blackStone ;
+        var whiteStone ;
+        
+        
+        if(this.modelData[i].participant) {
+            url = this.modelData[i].participant.getThumbnailUrl() ;
+            name = this.modelData[i].participant.getDisplayName() ;
+        }
+        else {
+            url = "" ;
+            name = "All other participants" ;
+        }
+        
+        blackStone = whiteStone = "-" ;
+        if(this.modelData[i].mode == '1' ||
+           this.modelData[i].mode == '*') {
+           blackStone = "B" ;
+        }
+        if(this.modelData[i].mode == '2' ||
+           this.modelData[i].mode == '*') {
+           whiteStone = "W" ;
+        }
+        
+        var urlTd = document.createElement("TD") ;
+        if(url) 
+            urlTd.innerHTML = '<IMG SRC="'+url+'"/>' ;
+        tr.appendChild(urlTd) ;
+        
+        var nameTd = document.createElement("TD") ;
+        nameTd.innerHTML = name ;
+        tr.appendChild(nameTd) ;
+        
+        var blackTd = document.createElement("TD") ;
+        var blackA = document.createElement("A") ;
+        blackA.innerHTML = blackStone ;
+        var blackAOnclickRegisterer = function(index) {
+            blackA.onclick = function() {
+                self.onTogglePlayerColor(index, '1') ;
+            }
+        }
+        blackAOnclickRegisterer(i) ;
+        
+        blackTd.appendChild(blackA) ;
+        tr.appendChild(blackTd) ;
+        
+        var whiteTd = document.createElement("TD") ;
+        var whiteA = document.createElement("A") ;
+        whiteA.innerHTML = whiteStone;
+        var whiteAOnclickRegisterer = function(index) {
+            whiteA.onclick = function() {
+                self.onTogglePlayerColor(index, '2') ;
+            }
+        }
+        whiteAOnclickRegisterer(i) ;
+        
+        whiteTd.appendChild(whiteA) ;
+        tr.appendChild(whiteTd) ;
+
+        this.tableBody.appendChild(tr) ;
+        
+        this.modelData[i].whiteA = whiteA ;
+        this.modelData[i].blackA = blackA ;
+    }
+    
+    this.div = document.createElement("DIV") ;
+    with(this.div) {
+        style.position = "absolute" ;
+        style.left = "0px" ;
+        style.top = "0px" ;
+        style.zIndex = 10000 ;
+        style.background = "rgba(128, 128, 128, 0.5)" ;
+        style.verticalAlign =  "middle" ;
+        style.textAlign = "center" ;
+        style.display = "table" ;
+    }
+
+    this.div.appendChild(closeA) ;
+    this.div.appendChild(this.table) ;
+    this.parentDiv.appendChild(this.div) ;
+}
+
+GameModeController.prototype.loadModelData = function() {
+    this.modelData = [] ;
+
+    var participants = wave.getParticipants() ;
+    var participant ;
+    var mode ;
+    var rv = [] ;
+    for(var i=0; i<participants.length; i++) {
+        participant = participants[i] ;
+        mode = this.game.gameMode.getPlayerColor(participant.getId(), true) ;
+        
+        rv.push({participant: participant, mode: mode}) ;
+    }
+    
+    participant = null ;
+    mode = this.game.gameMode.getPlayerColor("*", true) ;
+    rv.push({participant: participant, mode: mode}) ;
+
+    this.modelData = rv ;
+    return rv ;
+}
+
+GameModeController.prototype.setVisible = function(visible) {
+    if(this.parentDiv) {
+        if(!this.div) {
+            this.buildUI() ;
+        }
+    }
+    if(this.div && this.parentDiv) {
+        with(this.div) {
+            style.width = this.parentDiv.style.width + "px" ;
+            style.height = this.parentDiv.style.height + "px" ;
+            if(visible) {
+                style.visibility = "visible" ;
+            } else {
+                style.visibility = "hidden" ;
+            }
+        }
+    }
+}
+
+GameModeController.prototype.getGameMode = function() {
+    var gameMode = new SimpleGameMode() ;
+    for(var i=0; i<this.modelData.length; i++) {
+        var participant = this.modelData[i].participant ;
+        var participantId = "*" ;
+        if(participant)
+            participantId = this.modelData[i].participant.getId() ;
+        var color = this.modelData[i].mode ;
+        gameMode.setPlayerColor(participantId, color) ;
+    }
+    
+    return gameMode ;
+}
+
+GameModeController.prototype.onClose = function() {
+    this.onCloseCallback() ;
+}
+
+
+GameModeController.prototype.onTogglePlayerColor = function(index, colorToToggle) {
+    var data = this.modelData[index] ;
+    var blackStone ;
+    var whiteStone ;
+
+    if(data.mode == '*') {
+        data.mode = '1' ;
+        if(colorToToggle == '1') {
+           data.mode = '2'; 
+        }
+    }
+    else if(data.mode == '1') {
+        data.mode = '*' ;
+        if(colorToToggle == '1') {
+            data.mode = '' ;
+        }
+    }
+    else if(data.mode == '2') {
+        data.mode = '' ;
+        if(colorToToggle == '1') {
+            data.mode = '*';
+        }
+    }
+    else {
+        data.mode = colorToToggle ;
+    }
+
+    blackStone = whiteStone = "-" ;
+    if(data.mode == '1' ||
+        data.mode == '*') {
+        blackStone = "B" ;
+    }
+    if(data.mode == '2' ||
+        data.mode == '*') {
+        whiteStone = "W" ;
+    }
+    
+    data.blackA.innerHTML = blackStone ;
+    data.whiteA.innerHTML = whiteStone ;
 }
 
 // ----------------------------------------------------------
@@ -1512,7 +1697,7 @@ SimpleSerializer.prototype.serialize = function() {
         
         if(entry.followup) {
             for(var j=0; j<entry.followup.length; j++) {
-	    	l.log += SimpleSerializer.indexToCode[entry.followup[j].type];
+                l.log += SimpleSerializer.indexToCode[entry.followup[j].type];
                 l.log += SimpleSerializer.indexToCode[entry.followup[j].i] ;
                 l.log += SimpleSerializer.indexToCode[entry.followup[j].j] ;
             }
@@ -1599,7 +1784,7 @@ SimpleParser.prototype.construct = function() {
               c!=']' &&
               c!='(' &&
               c!=')') {
-   	    type = SimpleParser.codeToIndex[c] ;
+            type = SimpleParser.codeToIndex[c] ;
             c = l.log[index++] ;
             i = SimpleParser.codeToIndex[c] ;
             c = l.log[index++] ;
@@ -1660,15 +1845,22 @@ SimpleGameMode.prototype.getData = function() {
 }
 
 SimpleGameMode.prototype.setPlayerColor = function(participantId, color) {    
-    if(!color) delete this.participantMap_[participantId] ;
-    else this.participantMap_[participantId] = color ;
+    if(!color) {
+        delete this.participantMap_[participantId] ;
+    }
+    else {
+        this.participantMap_[participantId] = color ;
+    }
 }
 
-SimpleGameMode.prototype.getPlayerColor = function(participantId) {
+SimpleGameMode.prototype.getPlayerColor = function(participantId, noWildcardForUser) {
     var color = this.participantMap_[participantId] ;
     if(color) {
         return color ;
     }
+
+    if(noWildcardForUser) return null ;
+    
     return this.participantMap_["*"] ;
 }
 
