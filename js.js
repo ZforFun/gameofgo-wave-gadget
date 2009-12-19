@@ -1218,11 +1218,26 @@ ThemeManager.prototype.processStoneItem = function(stone) {
             if(typeAttribute=="1-last") {
                 this.blackLastStoneImageUrl += item.firstChild.nodeValue ;
             }
+            if(typeAttribute=="1-dead") {
+                this.blackDeadStoneImageUrl += item.firstChild.nodeValue ;
+            }
+            if(typeAttribute=="1-terr") {
+                this.blackTerritoryImageUrl += item.firstChild.nodeValue ;
+            }
             else if(typeAttribute=="2"){
                 this.whiteStoneImageUrl += item.firstChild.nodeValue ;
             }
             else if(typeAttribute=="2-last"){
                 this.whiteLastStoneImageUrl += item.firstChild.nodeValue ;
+            }
+            else if(typeAttribute=="2-dead"){
+                this.whiteDeadImageUrl += item.firstChild.nodeValue ;
+            }
+            if(typeAttribute=="2-terr") {
+                this.whiteTerritoryImageUrl += item.firstChild.nodeValue ;
+            }
+            if(typeAttribute=="ko") {
+                this.koImageUrl += item.firstChild.nodeValue ;
             }
         }
     }
