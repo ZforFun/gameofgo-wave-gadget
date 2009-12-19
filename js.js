@@ -27,7 +27,7 @@ Game.prototype.initializeAppearance = function(boardImageUrl,
                                                blackLastStoneImageUrl, whiteLastStoneImageUrl,
                                                blackDeadStoneImageUrl, whiteDeadStoneImageUrl,
                                                blackTerritoryImageUrl, whiteTerritoryImageUrl,
-                                               koImageURL, boardSize, boardGeometry, stoneGeometry) {
+                                               koImageUrl, boardSize, boardGeometry, stoneGeometry) {
     if(this.boardSize && (this.boardSize != boardSize)) {
         // TODO: report error
         return ;
@@ -58,13 +58,13 @@ Game.prototype.onThemeChange = function(boardImageUrl,
                                         blackLastStoneImageUrl, whiteLastStoneImageUrl,
                                         blackDeadStoneImageUrl, whiteDeadStoneImageUrl,
                                         blackTerritoryImageUrl, whiteTerritoryImageUrl,
-                                        koImageURL, boardSize, boardGeometry, stoneGeometry) {
+                                        koImageUrl, boardSize, boardGeometry, stoneGeometry) {
     this.initializeAppearance(boardImageUrl,
                               blackStoneImageUrl, whiteStoneImageUrl,
                               blackLastStoneImageUrl, whiteLastStoneImageUrl,
                               blackDeadStoneImageUrl, whiteDeadStoneImageUrl,
                               blackTerritoryImageUrl, whiteTerritoryImageUrl,
-			      koImageURL, boardSize, boardGeometry, stoneGeometry) ;
+			      koImageUrl, boardSize, boardGeometry, stoneGeometry) ;
     this.resetBoardUI() ;
 
     if(this.state == 3) {
@@ -1124,7 +1124,7 @@ ThemeManager.prototype.onThemeUrlFetched = function(obj) {
     this.whiteDeadStoneImageUrl = this.url ;
     this.blackTerritoryImageUrl = this.url ;
     this.whiteTerritoryImageUrl = this.url ;
-    this.koImageURL             = this.url ;
+    this.koImageUrl             = this.url ;
 
     // Get root element
     var theme = obj.data.getElementsByTagName("theme").item(0) ;
