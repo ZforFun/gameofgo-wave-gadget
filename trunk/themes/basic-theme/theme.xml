@@ -18,5 +18,10 @@
     <url type="2">white.png</url>
     <url type="1-last">black-last.png</url>
     <url type="2-last">white-last.png</url>
+    <url type="1-dead">black-dead.png</url>
+    <url type="2-dead">white-dead.png</url>
+    <url type="1-terr">black-terr.png</url>
+    <url type="2-terr">white-terr.png</url>
+    <url type="ko">ko.png</url>
   </stone>
 </theme>
