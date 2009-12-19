@@ -805,7 +805,7 @@ GameBoard.prototype.tryToApplyStepToBoard = function(x, y, color) {
         this.walkShape(x, y, shape, lives) ;
         if (shape.data.length == 1 && lives.data.length == 1) {
             this.ko.ko = true;   //ko.x & ko.y is set already above in the while-loop
-            this.gameLog.addFollowup(GameLogEntry.FOLLOWUPTYPE_KO, i, j) ;	    	
+            this.gameLog.addFollowup(GameLogEntry.FOLLOWUPTYPE_KO, this.ko.i, this.ko.j) ;	    	
         }
     }	 
 
