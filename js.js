@@ -913,7 +913,7 @@ GameBoard.prototype.applyLog = function (log, from) {
     if(!from) from = 0 ;
     for(i=from; i<len; i++) {
         var s = log.getEntry(i) ;
-        this.ko = false;
+        this.ko.ko = false;
         if(s.type == GameLogEntry.TYPE_PASS) {
             this.pass(s.color, true) ;
         }
