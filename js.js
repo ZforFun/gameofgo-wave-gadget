@@ -164,7 +164,7 @@ Game.prototype.renderBoard = function() {
             var color = this.gameBoard.getField(i, j) ;
             var last  = this.gameBoard.isLast(i, j) ;
             var ko    = false ;
-            if (gameBoard.ko.ko && gameBoard.ko.i == i && gameBoard.ko.j == j ) {
+            if (this.gameBoard.ko.ko && this.gameBoard.ko.i == i && this.gameBoard.ko.j == j ) {
     	        ko = true;
 	    }
             this.setStone(i, j, color, last, ko) ;
