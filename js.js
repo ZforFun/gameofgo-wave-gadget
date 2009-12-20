@@ -272,9 +272,10 @@ Game.prototype.onClickOnBoard = function(event) {
 
     if(!this.gameMode) return ;
     
-    if(!this.gameMode.isParticipantTurn(wave.getViewer().getId(), this.gameBoard.nextPlayerColor))
+    if(!this.gameMode.isParticipantTurn(wave.getViewer().getId(),
+                                        this.gameBoard.nextPlayerColor)) {
         return ;
-        
+    }
     this.gameBoard.makeMove(i, j, this.gameBoard.nextPlayerColor) ;
     this.renderBoardAbstract_();
 }
@@ -290,7 +291,14 @@ Game.prototype.redo = function() {
 }
 
 Game.prototype.pass = function() {
-    this.gameBoard.pass() ;
+    if(!this.gameMode) return ;
+    
+    if(!this.gameMode.isParticipantTurn(wave.getViewer().getId(),
+                                        this.gameBoard.nextPlayerColor)) {
+        return ;
+    }
+    
+    this.gameBoard.pass(this.gameBoard.nextPlayerColor) ;
     this.renderBoardAbstract_();
 }
 
@@ -385,7 +393,7 @@ Game.prototype.saveStateToWave = function() {
         wave.getState().submitDelta(delta) ;
     }
     
-    return change ;
+    return change;
 }
 
 Game.prototype.restoreStateFromWave = function() {
@@ -669,7 +677,7 @@ GameBoard.prototype.removeStone = function(i, j, noLog) {
         this.gameLog.addFollowup(GameLogEntry.FOLLOWUPTYPE_REMOVE, i, j) ;
     }
 
-    true ;
+    return true ;
 }
 
 // Protected:
@@ -710,7 +718,7 @@ GameBoard.prototype.pass = function(color, noLog) {
     }
     
     if(!noLog) {
-        this.gameLog.addEntry(GameLog.TYPE_PASS, 0, 0, color) ;
+        this.gameLog.addEntry(GameLogEntry.TYPE_PASS, 0, 0, color) ;
     }
 }
 
