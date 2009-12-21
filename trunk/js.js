@@ -1061,7 +1061,13 @@ SortedSet.prototype.pop = function() {
 
 function ThemeManager(game, url) {
     this.game = game ;
-    this.url  = url ;
+    url = url.replace(/^\s+|\s+$/g, '') ;
+    if(url.length>0) {
+        if(url.charAt(url.length-1) != '/') {
+            url += '/' ;
+        }
+    }
+    this.url = url ;
 }
 
 ThemeManager.prototype.loadTheme = function() {
