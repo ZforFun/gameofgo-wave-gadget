@@ -1,9 +1,3 @@
-function LOG(p) {
-    if(typeof console != "undefined" && console.debug) {
-        console.debug(p) ;
-    }
-}
-
 // ----------------------------------------------------------
 // ----- Class: Game ----------------------------------------
 // ----------------------------------------------------------
@@ -245,6 +239,7 @@ Game.prototype.renderBoardAbstract_ = function() {
 }
 
 Game.prototype.onClickOnBoard = function(event) {
+
     if(this.state != 3) return ;
 
     var x, y ;
@@ -1367,53 +1362,9 @@ SGFParser.prototype.consumeWhiteSpaces = function(){
     return this.str.length>0;
 }
 
-
-function serialize(_obj)
-{
-    if(_obj==null) return "";
-   // Let Gecko browsers do this the easy way
-    if (typeof _obj.toSource !== 'undefined' && typeof _obj.callee === 'undefined') {
-        return _obj.toSource();
-    }
-
-    // Other browsers must do it the hard way
-    switch (typeof _obj) {
-        // numbers, booleans, and functions are trivial:
-        // just return the object itself since its default .toString()
-        // gives us exactly what we want
-        case 'number':
-        case 'boolean':
-        case 'function':
-            return _obj;
-            break;
-
-        // for JSON format, strings need to be wrapped in quotes
-        case 'string':
-            return '\'' + _obj + '\'';
-            break;
-
-        case 'object':
-            var str;
-            if (_obj.constructor === Array || typeof _obj.callee !== 'undefined') {
-                str = '[';
-                var i, len = _obj.length;
-                for (i = 0; i < len-1; i++) { str += serialize(_obj[i]) + ','; }
-                str += serialize(_obj[i]) + ']';
-            }
-            else {
-                str = '{';
-                var key;
-                for (key in _obj) { str += key + ':' + serialize(_obj[key]) + ','; }
-                str = str.replace(/\,$/, '') + '}';
-            }
-            return str;
-            break;
-
-        default:
-            return 'UNKNOWN';
-            break;
-    }
-}
+// ----------------------------------------------------------
+// ----- Class: LogViewController ---------------------------
+// ----------------------------------------------------------
 
 function LogViewController(game, parentDiv) {
     this.log = null ;
@@ -1538,7 +1489,7 @@ GameModeController.prototype.buildUI = function() {
         style.position = "absolute" ;
         style.left = "0px" ;
         style.top = "0px" ;
-        style.zIndex = 10000 ;
+        style.zIndex = 9999 ;
         style.background = "rgba(128, 128, 128, 0.5)" ;
         style.verticalAlign =  "middle" ;
         style.textAlign = "center" ;
@@ -1580,12 +1531,16 @@ GameModeController.prototype.setVisible = function(visible) {
     }
     if(this.div && this.parentDiv) {
         with(this.div) {
-            style.width = this.parentDiv.style.width + "px" ;
-            style.height = this.parentDiv.style.height + "px" ;
+            if(this.game.boardImage.width && this.game.boardImage.height) {
+                style.width = this.game.boardImage.width + "px" ;
+                style.height = this.game.boardImage.height + "px" ;
+            }
             if(visible) {
                 style.visibility = "visible" ;
+                style.zIndex = 9999 ;
             } else {
                 style.visibility = "hidden" ;
+                style.zIndex = -9999 ;
             }
         }
     }
@@ -1880,6 +1835,7 @@ SimpleGameMode.prototype.getPlayerColor = function(participantId, noWildcardForU
 
 SimpleGameMode.prototype.isParticipantTurn = function(participantId, color) {
     var playerColor = this.getPlayerColor(participantId) ;
+
     if(playerColor == color) return true ;
     if(playerColor == "*") return true ;
     
