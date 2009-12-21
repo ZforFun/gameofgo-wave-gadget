@@ -1472,7 +1472,7 @@ GameModeController.prototype.buildUI = function() {
             name = this.modelData[i].participant.getDisplayName() ;
         }
         else {
-            url = "" ;
+            url = "https://wave.google.com/wave/static/images/unknown.jpg" ;
             name = "All other participants" ;
         }
         
@@ -1488,7 +1488,7 @@ GameModeController.prototype.buildUI = function() {
         
         var urlTd = document.createElement("TD") ;
         if(url) 
-            urlTd.innerHTML = '<IMG SRC="'+url+'"/>' ;
+            urlTd.innerHTML = '<IMG SRC="'+url+'" width="40"/>' ;
         tr.appendChild(urlTd) ;
         
         var nameTd = document.createElement("TD") ;
