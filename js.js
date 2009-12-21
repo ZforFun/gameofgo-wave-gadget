@@ -115,17 +115,19 @@ Game.prototype.openGameModeUI = function() {
         this.gameModeController = new GameModeController(this, this.div) ;
     }
     this.gameModeController.resetUI() ;
-    this.gameModeController.setCloseCallback(function() {
-        self.onGameModeChange() ;
+    this.gameModeController.setCloseCallback(function(cancel) {
+        self.onGameModeChange(cancel) ;
     }) ;
     this.gameModeController.loadModelData() ;
     this.gameModeController.setVisible(true) ;
 }
 
-Game.prototype.onGameModeChange = function() {
+Game.prototype.onGameModeChange = function(cancel) {
     this.gameModeController.setVisible(false) ;
-    var gameMode = this.gameModeController.getGameMode() ;
-    this.setGameMode(gameMode) ;
+    if(!cancel) {
+        var gameMode = this.gameModeController.getGameMode() ;
+        this.setGameMode(gameMode) ;
+    }
 }
 
 Game.prototype.setGameMode = function(gameMode) {
@@ -1439,6 +1441,12 @@ GameModeController.prototype.buildUI = function() {
         self.onClose() ;
     }
     
+    var cancelA = document.createElement("A") ;
+    cancelA.innerHTML = "Cancel" ;
+    cancelA.onclick = function() {
+        self.onCancel() ;
+    }
+    
     this.table = document.createElement("TABLE") ;
     this.table.width = "100%" ;
     this.tableBody = document.createElement("TBODY");
@@ -1520,13 +1528,14 @@ GameModeController.prototype.buildUI = function() {
         style.left = "0px" ;
         style.top = "0px" ;
         style.zIndex = 9999 ;
-        style.background = "rgba(64, 64, 64, 0.75)" ;
+        style.background = "rgba(196, 196, 196, 0.75)" ;
         style.verticalAlign =  "middle" ;
         style.textAlign = "center" ;
         style.display = "table" ;
     }
 
     this.div.appendChild(closeA) ;
+    this.div.appendChild(cancelA) ;
     this.div.appendChild(this.table) ;
     this.parentDiv.appendChild(this.div) ;
 }
@@ -1593,6 +1602,10 @@ GameModeController.prototype.getGameMode = function() {
 
 GameModeController.prototype.onClose = function() {
     this.onCloseCallback() ;
+}
+
+GameModeController.prototype.onCancel = function() {
+    this.onCloseCallback(true) ;
 }
 
 
