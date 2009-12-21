@@ -1,3 +1,12 @@
+MessageManager = {} ;
+MessageManager.getInstance = function() {
+    if(!MessageManager.mainMessageManager) {
+        MessageManager.mainMessageManager = new gadgets.MiniMessage(myModuleId) ;
+    }
+    
+    return MessageManager.mainMessageManager ;
+}
+
 // ----------------------------------------------------------
 // ----- Class: Game ----------------------------------------
 // ----------------------------------------------------------
@@ -7,7 +16,7 @@ function Game(div, themeUrl) {
     this.state = 0 ; // 1->wave callback happened 2->board UI downloaded 
 }
 
-Game.prototype.changeTheme = function (themeUrl) {
+Game.prototype.initiateChangeTheme = function (themeUrl) {
     this.themeManager = new ThemeManager(this, themeUrl) ;
     this.themeManager.loadTheme() ;
 }
@@ -47,7 +56,8 @@ Game.prototype.initializeAppearance = function(boardImageUrl,
     this.state |= 2 ;
 }
 
-Game.prototype.onThemeChange = function(boardImageUrl, 
+Game.prototype.onThemeChange = function(themeUrl,
+                                        boardImageUrl, 
                                         blackStoneImageUrl, whiteStoneImageUrl,
                                         blackLastStoneImageUrl, whiteLastStoneImageUrl,
                                         blackDeadStoneImageUrl, whiteDeadStoneImageUrl,
@@ -60,6 +70,12 @@ Game.prototype.onThemeChange = function(boardImageUrl,
                               blackTerritoryImageUrl, whiteTerritoryImageUrl,
                               koImageUrl, boardSize, boardGeometry, stoneGeometry) ;
     this.resetBoardUI() ;
+
+    var themeUrlFromPref = prefs.getString('themeUrl') ;
+    if(themeUrlFromPref != themeUrl) {
+        prefs.set('themeUrl', themeUrl) ;
+        MessageManager.getInstance().createTimerMessage("Default theme changed to "+themeUrl, 5) ;
+    }
 
     if(this.state == 3) {
         this.restoreStateFromWave();
@@ -244,16 +260,23 @@ Game.prototype.onClickOnBoard = function(event) {
 
     var x, y ;
 
-    if(event.offsetX) {
+    if(event.offsetX && event.offsetY) {
         x = event.offsetX ;
-    } else {
-        x = event.pageX - this.div.offsetLeft ;
-    }
-
-    if(event.offsetY) {
         y = event.offsetY ;
     } else {
-        y = event.pageY - this.div.offsetTop ;
+        var offsetLeft = 0 ;
+        var offsetTop = 0 ;
+        var obj = this.boardImage ;
+        
+        if(obj.offsetParent) {
+            do {
+                offsetLeft += obj.offsetLeft ;
+                offsetTop += obj.offsetTop ;
+            } while( obj=obj.offsetParent ) ;
+        }
+            
+        x = event.pageX - offsetLeft ;
+        y = event.pageY - offsetTop ;
     }
 
     var i, j ;
@@ -637,7 +660,7 @@ GameBoard.prototype.makeMove = function (x, y, color) {
 
     if(moveResult != GameBoard.MOVE_OK) {
         this.undo(/*trimLog=*/true) ;
-        alert("Wrong move. Error code: "+moveResult+".\n(1:Alr.Occ; 2:Suicide; 3:Ko)");
+        MessageManager.getInstance().createDismissibleMessage("Wrong move. Error code: "+moveResult+".\n(1:Alr.Occ; 2:Suicide; 3:Ko)");
         return moveResult ;
     }
 
@@ -1057,12 +1080,15 @@ SortedSet.prototype.pop = function() {
 function ThemeManager(game, url) {
     this.game = game ;
     url = url.replace(/^\s+|\s+$/g, '') ;
-    if(url.length>0) {
-        if(url.charAt(url.length-1) != '/') {
-            url += '/' ;
+    this.url = url ;
+    
+    this.urlBase = url ;
+    if(this.urlBase.length>0) {
+        if(this.urlBase.charAt(url.length-1) != '/') {
+            this.urlBase += '/' ;
         }
     }
-    this.url = url ;
+
 }
 
 ThemeManager.prototype.loadTheme = function() {
@@ -1073,8 +1099,8 @@ ThemeManager.prototype.loadTheme = function() {
     var callback = function(obj) {
         self.onThemeUrlFetched(obj) ;
     }
-    
-    var fileUrl = this.url + "theme.xml" ;
+
+    var fileUrl = this.urlBase + "theme.xml" ;
     params[gadgets.io.RequestParameters.CONTENT_TYPE] = gadgets.io.ContentType.DOM ;
     gadgets.io.makeRequest(fileUrl, callback, params) ;
     
@@ -1082,26 +1108,26 @@ ThemeManager.prototype.loadTheme = function() {
 }
 
 ThemeManager.prototype.onThemeUrlFetched = function(obj) {
-    if(typeof console != "undefined") {
-        console.debug("Theme Manager Fetch:") ;
-        console.debug(obj) ;
+    if(obj.errors && obj.errors.length && obj.errors.length>0) {
+        MessageManager.getInstance().createDismissibleMessage("Fetching a theme from URL "+this.url+" failed.") ;
+        return ;
     }
 
     this.boardGeometry          = null ;
     this.boardSize              = null ;
     this.stoneGeometry          = null ;
 
-    this.boardImageUrl          = this.url ;
-    this.blackStoneImageUrl     = this.url ;
-    this.whiteStoneImageUrl     = this.url ;
+    this.boardImageUrl          = this.urlBase ;
+    this.blackStoneImageUrl     = this.urlBase ;
+    this.whiteStoneImageUrl     = this.urlBase ;
 
-    this.blackLastStoneImageUrl = this.url ;
-    this.whiteLastStoneImageUrl = this.url ;
-    this.blackDeadStoneImageUrl = this.url ;
-    this.whiteDeadStoneImageUrl = this.url ;
-    this.blackTerritoryImageUrl = this.url ;
-    this.whiteTerritoryImageUrl = this.url ;
-    this.koImageUrl             = this.url ;
+    this.blackLastStoneImageUrl = this.urlBase ;
+    this.whiteLastStoneImageUrl = this.urlBase ;
+    this.blackDeadStoneImageUrl = this.urlBase ;
+    this.whiteDeadStoneImageUrl = this.urlBase ;
+    this.blackTerritoryImageUrl = this.urlBase ;
+    this.whiteTerritoryImageUrl = this.urlBase ;
+    this.koImageUrl             = this.urlBase ;
 
 
     // Get root element
@@ -1120,19 +1146,20 @@ ThemeManager.prototype.onThemeUrlFetched = function(obj) {
         }
     }
 
-    this.game.onThemeChange(this.boardImageUrl,
-                    this.blackStoneImageUrl,
-                    this.whiteStoneImageUrl,
-                    this.blackLastStoneImageUrl,
-                    this.whiteLastStoneImageUrl,
-                    this.blackDeadStoneImageUrl,
-                    this.whiteDeadStoneImageUrl,
-                    this.blackTerritoryImageUrl,
-                    this.whiteTerritoryImageUrl,
-                    this.koImageUrl,
-                    this.boardSize, 
-                    this.boardGeometry,
-                    this.stoneGeometry) ;
+    this.game.onThemeChange(this.url,
+                            this.boardImageUrl,
+                            this.blackStoneImageUrl,
+                            this.whiteStoneImageUrl,
+                            this.blackLastStoneImageUrl,
+                            this.whiteLastStoneImageUrl,
+                            this.blackDeadStoneImageUrl,
+                            this.whiteDeadStoneImageUrl,
+                            this.blackTerritoryImageUrl,
+                            this.whiteTerritoryImageUrl,
+                            this.koImageUrl,
+                            this.boardSize, 
+                            this.boardGeometry,
+                            this.stoneGeometry) ;
 }
 
 ThemeManager.prototype.processBoardItem = function(board) {
@@ -1229,7 +1256,8 @@ ThemeManager.prototype.processStoneItem = function(stone) {
 
 function DummyThemeManager(game, url) {
     var prefix = "themes/basic-theme/" ;
-    game.onThemeChange(prefix+"board.png",
+    game.onThemeChange(prefix,
+                       prefix+"board.png",
                        prefix+"black.png",
                        prefix+"white.png",
                        prefix+"black-last.png",
@@ -1253,11 +1281,11 @@ function SGFParser(str, game) {
 SGFParser.prototype.parse = function() {
     this.game.reset();
     if (!this.consumeWhiteSpaces()) {
-        alert("Unexpected end of file");
+        MessageManager.getInstance().createDismissibleMessage("Unexpected end of file") ;
         return;
     }
     if (this.str.charAt(0)!='('){
-        alert("Non-expected character: '"+this.str.charAt(0)+"'. Expected: '('");
+        MessageManager.getInstance().createDismissibleMessage("Non-expected character: '"+this.str.charAt(0)+"'. Expected: '('");
         return;
     }
     this.str = this.str.slice(1);
@@ -1267,13 +1295,13 @@ SGFParser.prototype.parse = function() {
             if (this.propertyValue.length==0) {
                 this.game.gameBoard.pass(1);
             } else if (this.propertyValue.length!=2) {
-                alert("Non-expected property-value: '"+this.propertyValue+"'.");
+                MessageManager.getInstance().createDismissibleMessage("Non-expected property-value: '"+this.propertyValue+"'.");
                 return;
             } else {
                 var i=this.propertyValue.charCodeAt(0)-97;
                 var j=this.propertyValue.charCodeAt(1)-97;
                 if (i>19 || j>19 || i<0 || j<0) {
-                    alert("Non-expected property-value: '"+this.propertyValue+"'.");
+                    MessageManager.getInstance().createDismissibleMessage("Non-expected property-value: '"+this.propertyValue+"'.");
                     return;
                 }
                 this.game.gameBoard.makeMove(i,j,1);
@@ -1282,13 +1310,13 @@ SGFParser.prototype.parse = function() {
             if (this.propertyValue.length==0) {
                 this.game.gameBoard.pass(2);
             } else if (this.propertyValue.length!=2) {
-                alert("Non-expected property-value: '"+this.propertyValue+"'.");
+                MessageManager.getInstance().createDismissibleMessage("Non-expected property-value: '"+this.propertyValue+"'.");
                 return;
             } else {
                 var i=this.propertyValue.charCodeAt(0)-97;
                 var j=this.propertyValue.charCodeAt(1)-97;
                 if (i>19 || j>19 || i<0 || j<0) {
-                    alert("Non-expected property-value: '"+this.propertyValue+"'.");
+                    MessageManager.getInstance().createDismissibleMessage("Non-expected property-value: '"+this.propertyValue+"'.");
                     return;
                 }
                 this.game.gameBoard.makeMove(i,j,2);
@@ -1412,6 +1440,7 @@ GameModeController.prototype.buildUI = function() {
     }
     
     this.table = document.createElement("TABLE") ;
+    this.table.width = "100%" ;
     this.tableBody = document.createElement("TBODY");
     
     this.table.appendChild(this.tableBody) ;
@@ -1430,7 +1459,7 @@ GameModeController.prototype.buildUI = function() {
         }
         else {
             url = "https://wave.google.com/wave/static/images/unknown.jpg" ;
-            name = "All other participants" ;
+            name = "Defaults (applies if not otherwise specified)" ;
         }
         
         blackStone = whiteStone = "-" ;
@@ -1444,8 +1473,9 @@ GameModeController.prototype.buildUI = function() {
         }
         
         var urlTd = document.createElement("TD") ;
-        if(url) 
+        if(url) {
             urlTd.innerHTML = '<IMG SRC="'+url+'" width="40"/>' ;
+        }
         tr.appendChild(urlTd) ;
         
         var nameTd = document.createElement("TD") ;
@@ -1490,7 +1520,7 @@ GameModeController.prototype.buildUI = function() {
         style.left = "0px" ;
         style.top = "0px" ;
         style.zIndex = 9999 ;
-        style.background = "rgba(128, 128, 128, 0.5)" ;
+        style.background = "rgba(64, 64, 64, 0.75)" ;
         style.verticalAlign =  "middle" ;
         style.textAlign = "center" ;
         style.display = "table" ;
@@ -1508,16 +1538,17 @@ GameModeController.prototype.loadModelData = function() {
     var participant ;
     var mode ;
     var rv = [] ;
+
+    participant = null ;
+    mode = this.game.gameMode.getPlayerColor("*", true) ;
+    rv.push({participant: participant, mode: mode}) ;
+
     for(var i=0; i<participants.length; i++) {
         participant = participants[i] ;
         mode = this.game.gameMode.getPlayerColor(participant.getId(), true) ;
         
         rv.push({participant: participant, mode: mode}) ;
     }
-    
-    participant = null ;
-    mode = this.game.gameMode.getPlayerColor("*", true) ;
-    rv.push({participant: participant, mode: mode}) ;
 
     this.modelData = rv ;
     return rv ;
