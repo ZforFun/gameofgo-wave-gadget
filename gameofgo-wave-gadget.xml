@@ -7,6 +7,7 @@
 -->
     <Require feature="wave" />
     <Require feature="dynamic-height" />
+    <Require feature="minimessage"/>
   </ModulePrefs>
   <UserPref name="themeUrl"
             display_name="Theme Url"
@@ -40,6 +41,8 @@
         var prefs = new gadgets.Prefs();
         var themeUrl = prefs.getString('themeUrl') ;
         var game = new Game(document.getElementById("board_div"), themeUrl) ;
+        var myModuleId = __MODULE_ID__ ;
+        
         if(!themeUrl) {
           themeUrl = "http://gameofgo-wave-gadget.googlecode.com/svn/trunk/themes/basic-theme/" ;
         }
@@ -47,8 +50,7 @@
         themeManager.loadTheme() ;
         function changeTheme() {
            var themeUrl = document.getElementById('themeUrl').value ;
-           prefs.set('themeUrl', themeUrl) ;
-           game.changeTheme(themeUrl);
+           game.initiateChangeTheme(themeUrl) ;
         }
         
         function init(){
