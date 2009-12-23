@@ -1437,16 +1437,20 @@ GameModeController.prototype.buildUI = function() {
 
     var closeA = document.createElement("A") ;
     closeA.innerHTML = "Apply & Close" ;
+    closeA.setAttribute('href', '#');
     closeA.onclick = function() {
         self.onClose() ;
     }
-    
+
     var cancelA = document.createElement("A") ;
     cancelA.innerHTML = "Cancel" ;
+    cancelA.setAttribute('href', '#');
     cancelA.onclick = function() {
         self.onCancel() ;
     }
     
+    var separator = document.createTextNode("\u00A0\u00A0\u00A0"); //non-breaking space
+
     this.table = document.createElement("TABLE") ;
     this.table.width = "100%" ;
     this.tableBody = document.createElement("TBODY");
@@ -1535,6 +1539,7 @@ GameModeController.prototype.buildUI = function() {
     }
 
     this.div.appendChild(closeA) ;
+    this.div.appendChild(separator) ;
     this.div.appendChild(cancelA) ;
     this.div.appendChild(this.table) ;
     this.parentDiv.appendChild(this.div) ;
