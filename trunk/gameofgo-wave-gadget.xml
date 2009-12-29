@@ -39,7 +39,7 @@
             <td><a href="" onclick="changeTheme();return false;">Change</a></td>
             <td><a href="" onclick="alert( game.exportToSGF() ); return false;">Export to SGF</a></td>
             <td><a href="" onclick="document.getElementById('divSGF').style.visibility='visible';return false;">Import from SGF</a></td>
-            <td><a href="" onclick="game.openGameModeUI();return false;">Players</a></td>
+            <td><a href="" onclick="game.openParticipantFilterUI();return false;">Players</a></td>
           </tr>
         </table>
         <div id="board_div" style="position:relative"/>
