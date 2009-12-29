@@ -17,7 +17,14 @@
 -->
   <Content type="html">
     <![CDATA[
-      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/js.js"></script>
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/game.js"></script>
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/board.js"></script>
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/log.js"></script>
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/thememanager.js"></script>
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/utils.js"></script>
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/participant.js"></script>
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/logview.js"></script>
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/sgf.js"></script>
       <div id="main_div" style="position:relative">
         <table>
           <tr id="settings">
