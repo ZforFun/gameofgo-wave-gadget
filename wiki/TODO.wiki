@@ -10,15 +10,15 @@ If a point is done, move it into the "Done" list
 
 To Do:
 
-  * Implement players and alternating moves
-  * Implement a simple KO-rule 
   * Counting mode (with signing stones as dead)
   * Add messages to the UI: e.g. "You can only put a stone on an empty place".
-  * With the [ExampleSGF2 second SFG example] the number of characters in the board description is over 10.000. This can be a lot of bytes. We should try to [Compressed_Game_Representation compress] the board size... 
 
 Done:
 
+  * Implement players and alternating moves
+  * Implement a simple KO-rule 
   * Button First (Instead of Undo-ing to the beginning)
   * Button Last (Instead of Redo-ing to the end)
   * Implement the SGF-parser (in a simple way for the time being)
   * Undo is not smooth on highly filled board 
+  * With the [ExampleSGF2 second SFG example] the number of characters in the board description is over 10.000. This can be a lot of bytes. We should try to [Compressed_Game_Representation compress] the board size... 
