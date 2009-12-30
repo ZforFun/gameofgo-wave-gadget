@@ -27,7 +27,7 @@
       <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/sgf.js"></script>
       <div id="main_div" style="position:relative">
         <table>
-          <tr id="settings">
+          <tr>
             <td><a href="" onclick="game.newSimpleGame();return false;"><b>New Game (alternating players)</b></a></td>
             <td><a href="" onclick="game.newAllPlayersCanPlayGame();return false;"><b>New Game (all players move)</b></a></td>
             <td><a href="" onclick="game.openParticipantFilterUI();return false;">Players</a></td>

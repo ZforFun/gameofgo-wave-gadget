@@ -321,19 +321,31 @@ Game.prototype._setStone = function(i, j, color, last, ko) {
     var src ;
     var im = this.stoneImages[i*this.boardSize+j] ;
 
-    if(color) {
-        if(color == 1) {
+    if (!color) {
+        color = GameBoardStone.COLOR_EMPTY;
+    }
+
+    if (color != GameBoardStone.COLOR_EMPTY) {
+        if (color == GameBoardStone.COLOR_BLACK_STONE) {
             if (!last) {
               src = this.blackStoneImageUrl ;
             } else {
               src = this.blackLastStoneImageUrl ;
             }
-        } else {
+        } else if (color == GameBoardStone.COLOR_WHITE_STONE) {
             if (!last) {
               src = this.whiteStoneImageUrl ;
             } else {
               src = this.whiteLastStoneImageUrl ;
             }
+        } else if (color == GameBoardStone.COLOR_DEAD_BLACK_STONE) {
+              src = this.blackDeadStoneImageUrl ;
+        } else if (color == GameBoardStone.COLOR_DEAD_WHITE_STONE) {
+              src = this.whiteDeadStoneImageUrl ;
+        } else if (color == GameBoardStone.COLOR_BLACK_TERRITORY) {
+              src = this.blackTerritoryImageUrl ;
+        } else if (color == GameBoardStone.COLOR_WHITE_TERRITORY) {
+              src = this.whiteTerritoryImageUrl ;
         }
         visibility = "visible" ;
     } else {
@@ -456,62 +468,3 @@ Game.prototype._isInWave = function() {
     return typeof wave != "undefined" ;
 }
 
-// ------------------------------------------------------------------------------
-// ----- Class: ParticipantFilter -----------------------------------------------
-// ------------------------------------------------------------------------------
-
-function ParticipantFilter(pmap) {
-    pmap = pmap || {} ;
-    var uidArr = pmap.uids || [] ;
-    var colorArr = pmap.colors || [] ;
-
-    this.participantMap_ = {} ;
-    for(var i=0; i<uidArr.length; i++) {
-        var uid = uidArr[i] ;
-        var color = colorArr[i] ;
-        this.participantMap_[uid] = color ;
-    }
-}
-
-ParticipantFilter.prototype.getName = function() {
-    return "ParticipantFilter" ;
-}
-
-ParticipantFilter.prototype.getData = function() {
-    var uidArr = [] ;
-    var colorArr = [] ;
-    for(var i in this.participantMap_) {
-        uidArr.push(i) ;
-        colorArr.push(this.participantMap_[i]) ;
-    }
-    return {uids: uidArr, colors: colorArr} ;
-}
-
-ParticipantFilter.prototype.setPlayerColor = function(participantId, color) {
-    if(!color) {
-        delete this.participantMap_[participantId] ;
-    }
-    else {
-        this.participantMap_[participantId] = color ;
-    }
-}
-
-ParticipantFilter.prototype.getPlayerColor = function(participantId, noWildcardForUser) {
-    var color = this.participantMap_[participantId] ;
-    if(color) {
-        return color ;
-    }
-
-    if(noWildcardForUser) return null ;
-
-    return this.participantMap_["*"] ;
-}
-
-ParticipantFilter.prototype.isParticipantTurn = function(participantId, color) {
-    var playerColor = this.getPlayerColor(participantId) ;
-
-    if(playerColor == color) return true ;
-    if(playerColor == "*") return true ;
-
-    return false ;
-}
