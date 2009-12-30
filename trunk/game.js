@@ -8,8 +8,16 @@
 
 function Game(div, themeUrl) {
     this.div = div ;
-    this.state = 0 ; // 1->wave callback happened 2->board UI downloaded
+    this.state = 0 ; 
 }
+
+// -----------------------------------------------------------------------------
+// ----- Class: Game -----------------------------------------------------------
+// ----- Constants -------------------------------------------------------------
+
+Game.STATE_INITIAL = 0 ;
+Game.STATE_THEME_LOADED = 1 ;
+Game.STATE_WAVE_STATE_LOADED = 2 ;
 
 // -----------------------------------------------------------------------------
 // ----- Class: Game -----------------------------------------------------------
@@ -60,7 +68,8 @@ Game.prototype.openParticipantFilterUI = function() {
 
 Game.prototype.onClickOnBoard = function(event) {
 
-    if(this.state != 3) return ;
+    if(this.state != (Game.STATE_THEME_LOADED | Game.STATE_WAVE_STATE_LOADED))
+        return ;
 
     var x, y ;
 
@@ -149,9 +158,9 @@ Game.prototype.importFromSGF = function(strSGF) {
 }
 
 Game.prototype.onWaveStateChange = function() {
-    this.state |= 1;
+    this.state |= Game.STATE_WAVE_STATE_LOADED;
 
-    if(this.state == 3) {
+    if(this.state == (Game.STATE_THEME_LOADED | Game.STATE_WAVE_STATE_LOADED)) {
         this._restoreStateFromWave();
         this._setWaitAnimation(false);
         this._renderBoard() ;
@@ -195,7 +204,7 @@ Game.prototype._initializeAppearance = function(boardImageUrl,
     this.boardGeometry = boardGeometry ;
     this.stoneGeometry = stoneGeometry ;
 
-    this.state |= 2 ;
+    this.state |= Game.STATE_THEME_LOADED  ;
 }
 
 Game.prototype._onThemeChange = function(themeUrl,
@@ -219,7 +228,7 @@ Game.prototype._onThemeChange = function(themeUrl,
         MessageManager.getInstance().createTimerMessage("Default theme changed to "+themeUrl, 5) ;
     }
 
-    if(this.state == 3) {
+    if(this.state == (Game.STATE_THEME_LOADED | Game.STATE_WAVE_STATE_LOADED)) {
         this._restoreStateFromWave();
         this._setWaitAnimation(false);
         this._renderBoard() ;
