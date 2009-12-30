@@ -10,15 +10,18 @@ function GameLogEntry(type, i, j, color) {
     // this.followup = null ;
 }
 
-GameLogEntry.TYPE_PUT = 1;
-GameLogEntry.TYPE_REMOVE = 2;
-GameLogEntry.TYPE_SET = 3;
-GameLogEntry.TYPE_PASS = 4;
+GameLogEntry.TYPE_PUT     = 1;
+GameLogEntry.TYPE_REMOVE  = 2;
+GameLogEntry.TYPE_SET     = 3;
+GameLogEntry.TYPE_PASS    = 4;
+GameLogEntry.TYPE_MARK    = 5;
 
 GameLogEntry.FOLLOWUPTYPE_REMOVE = 1;
-GameLogEntry.FOLLOWUPTYPE_KO   = 2;
-
-
+GameLogEntry.FOLLOWUPTYPE_KO     = 2;
+GameLogEntry.FOLLOWUPTYPE_MARK_AS_TERRITORY = 3;
+GameLogEntry.FOLLOWUPTYPE_MARK_AS_EMPTY     = 4;
+GameLogEntry.FOLLOWUPTYPE_MARK_AS_DEAD      = 5;
+GameLogEntry.FOLLOWUPTYPE_MARK_AS_LIVING    = 6;
 
 GameLogEntry.prototype.addFollowup = function(type, i, j) {
     if(!this.followup) {
@@ -138,6 +141,13 @@ GameLog.prototype.serialize = function() {
                 res += SimpleSerializer.indexToCode[entry.i] ;
                 res += SimpleSerializer.indexToCode[entry.j] ;
                 break ;
+            case GameLogEntry.TYPE_MARK:
+                c = '+' ;
+                if(entry.color == 2) c = '-' ;
+                res += c ;
+                res += SimpleSerializer.indexToCode[entry.i] ;
+                res += SimpleSerializer.indexToCode[entry.j] ;
+                break ;
         }
 
         if(entry.followup) {
@@ -192,11 +202,22 @@ GameLog.prototype.deSerialize = function(l) {
             j = SimpleParser.codeToIndex[c] ;
             c = l.log[index++] ;
         }
+        else if(c == '+' || c == '-') {
+            type = GameLogEntry.TYPE_MARK ;
+            color = 1 ;
+            if(c=='-') color = 2 ;
+            c = l.log[index++] ;
+            i = SimpleParser.codeToIndex[c] ;
+            c = l.log[index++] ;
+            j = SimpleParser.codeToIndex[c] ;
+            c = l.log[index++] ;
+        }
 
         this.addEntry(type, i, j, color) ;
 
         while(index<=l.log.length &&
               c!='<' && c!='>' &&
+              c!='+' && c!='-' &&
               c!='{' && c!='}' &&
               c!='[' && c!=']' &&
               c!='(' && c!=')') {

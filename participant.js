@@ -1,3 +1,67 @@
+// ------------------------------------------------------------------------------
+// ----- Class: ParticipantFilter -----------------------------------------------
+// ------------------------------------------------------------------------------
+
+function ParticipantFilter(pmap) {
+    pmap = pmap || {} ;
+    var uidArr = pmap.uids || [] ;
+    var colorArr = pmap.colors || [] ;
+
+    this.participantMap_ = {} ;
+    for(var i=0; i<uidArr.length; i++) {
+        var uid = uidArr[i] ;
+        var color = colorArr[i] ;
+        this.participantMap_[uid] = color ;
+    }
+}
+
+ParticipantFilter.prototype.getName = function() {
+    return "ParticipantFilter" ;
+}
+
+ParticipantFilter.prototype.getData = function() {
+    var uidArr = [] ;
+    var colorArr = [] ;
+    for(var i in this.participantMap_) {
+        uidArr.push(i) ;
+        colorArr.push(this.participantMap_[i]) ;
+    }
+    return {uids: uidArr, colors: colorArr} ;
+}
+
+ParticipantFilter.prototype.setPlayerColor = function(participantId, color) {
+    if(!color) {
+        delete this.participantMap_[participantId] ;
+    }
+    else {
+        this.participantMap_[participantId] = color ;
+    }
+}
+
+ParticipantFilter.prototype.getPlayerColor = function(participantId, noWildcardForUser) {
+    var color = this.participantMap_[participantId] ;
+    if(color) {
+        return color ;
+    }
+
+    if(noWildcardForUser) return null ;
+
+    return this.participantMap_["*"] ;
+}
+
+ParticipantFilter.prototype.isParticipantTurn = function(participantId, color) {
+    var playerColor = this.getPlayerColor(participantId) ;
+
+    if(playerColor == color) return true ;
+    if(playerColor == "*") return true ;
+
+    return false ;
+}
+
+// ------------------------------------------------------------------------------
+// ----- Class: Participant Controller ------------------------------------------
+// ------------------------------------------------------------------------------
+
 function ParticipantController(game, parentDiv) {
     this.game = game ;
     this.parentDiv = parentDiv ;
