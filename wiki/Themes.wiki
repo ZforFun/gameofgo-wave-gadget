@@ -19,4 +19,5 @@ Now we have the following four "standard" themes:
   * http://gameofgo-wave-gadget.googlecode.com/svn/trunk/themes/basic-9x9-theme-TEMP/ (this is just temporal, later, when the boardsize is independent on theme, this will be removed)
 
 Anybody can create an own theme. Technically the theme consist of an xml file and a bunch of png files. These should be created and hosted somewhere. If you look at a "standard" theme, you will be able to figure out, what you need to do to create an own theme.
-Mate
+
+Máté Bartalos
