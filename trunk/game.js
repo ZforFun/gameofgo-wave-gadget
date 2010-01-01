@@ -187,9 +187,18 @@ Game.prototype._initializeAppearance = function(boardImageUrl,
                                                blackDeadStoneImageUrl, whiteDeadStoneImageUrl,
                                                blackTerritoryImageUrl, whiteTerritoryImageUrl,
                                                koImageUrl, boardSize, boardGeometry, stoneGeometry) {
+//TODO: After separating boardsize & theme, the codes below might change
+    var result = 1;
     if(this.boardSize && (this.boardSize != boardSize)) {
-        // TODO: report error
-        return ;
+        if (this.gameBoard) {
+            if (this.gameBoard.gameLog.log.length != 0) {
+                MessageManager.getInstance().createTimerMessage("Changing to a theme with different board-size is allowed only if there were no moves yet.", 5) ;
+                return 0;
+            } else {
+                result = 2;
+            }
+
+        }
     }
 
     this.boardImageUrl = boardImageUrl ;
@@ -210,6 +219,7 @@ Game.prototype._initializeAppearance = function(boardImageUrl,
     this.stoneGeometry = stoneGeometry ;
 
     this.state |= Game.STATE_THEME_LOADED  ;
+    return result;
 }
 
 Game.prototype._onThemeChange = function(themeUrl,
@@ -219,18 +229,27 @@ Game.prototype._onThemeChange = function(themeUrl,
                                         blackDeadStoneImageUrl, whiteDeadStoneImageUrl,
                                         blackTerritoryImageUrl, whiteTerritoryImageUrl,
                                         koImageUrl, boardSize, boardGeometry, stoneGeometry) {
-    this._initializeAppearance(boardImageUrl,
+    var res = this._initializeAppearance(boardImageUrl,
                               blackStoneImageUrl, whiteStoneImageUrl,
                               blackLastStoneImageUrl, whiteLastStoneImageUrl,
                               blackDeadStoneImageUrl, whiteDeadStoneImageUrl,
                               blackTerritoryImageUrl, whiteTerritoryImageUrl,
                               koImageUrl, boardSize, boardGeometry, stoneGeometry) ;
+//TODO: After separating boardsize & theme, the codes below might change
+    if (!res) return;
+
     this._resetBoardUI() ;
 
     var themeUrlFromPref = prefs.getString('themeUrl') ;
     if(themeUrlFromPref != themeUrl) {
         prefs.set('themeUrl', themeUrl) ;
         MessageManager.getInstance().createTimerMessage("Default theme changed to "+themeUrl, 5) ;
+    }
+
+//TODO: After separating boardsize & theme, the codes below might change
+    if (res==2) {
+        this._reset();
+        this._saveStateToWave() ;
     }
 
     if(this.state == (Game.STATE_THEME_LOADED | Game.STATE_WAVE_STATE_LOADED)) {
