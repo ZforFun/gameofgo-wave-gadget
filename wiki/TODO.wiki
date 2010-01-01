@@ -13,7 +13,8 @@ To Do:
   * Counting mode (with signing stones as dead)
   * Add messages to the UI: e.g. "You can only put a stone on an empty place".
   * Panel for showing the moves so far, the number of captured stones, who comes, etc...
-  * Possibility of playing on 9x9 and 13x13 sized boards
+  * Separating board size from theme (a theme should support all the 3 standard sizes)
+
 
 Done:
 
