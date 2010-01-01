@@ -40,6 +40,7 @@
             <td><a href="" onclick="game.redo();return false;">Redo</a></td>
             <td><a href="" onclick="game.gotoLastStep();return false;">Last</a></td>
             <td><a href="" onclick="game.pass();return false;">Pass</a></td>
+            <td><a href="" onclick="game.result();return false;">Result</a></td>
           </tr>
         </table>
         <table>

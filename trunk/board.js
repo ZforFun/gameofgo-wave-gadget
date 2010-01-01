@@ -8,6 +8,7 @@ function GameBoardStone(x, y, color) {
     this.color = color ;
 }
 
+GameBoardStone.COLOR_NOT_KNOWN = -1;
 GameBoardStone.COLOR_EMPTY = 0;
 GameBoardStone.COLOR_BLACK_STONE = 1;
 GameBoardStone.COLOR_WHITE_STONE = 2;
@@ -15,6 +16,7 @@ GameBoardStone.COLOR_DEAD_BLACK_STONE = 3;
 GameBoardStone.COLOR_DEAD_WHITE_STONE = 4;
 GameBoardStone.COLOR_BLACK_TERRITORY = 5;
 GameBoardStone.COLOR_WHITE_TERRITORY = 6;
+GameBoardStone.COLOR_NEUTRAL = 7;
 
 GameBoardStone.newPassStone = function(color) {
     return new GameBoardStone(-1, -1, color) ;
@@ -59,7 +61,8 @@ function GameBoard(boardSize) {
     this.board = new Array() ;
     this.boardSize = boardSize ;
     this.gameLog = new GameLog() ;
-    this.numberOfRemovedStones=[];
+    this.numberOfRemovedStones = [0.0,0.0];
+    this.numberOfTerritory     = [0.0,0.0];
     this.nextPlayerColor = 1;
     this.ko = {ko:false, i:0, j:0};
     this.mode  = GameBoard.MODE_NORMAL; //default
@@ -130,17 +133,32 @@ GameBoard.prototype.pass = function(color, noLog) {
     }
 
     if(!noLog) {
-        var secondPass = (this.gameLog.lastEntry().type == GameLogEntry.TYPE_PASS);
+        var secondPass = false;
+        if (this.gameLog.getLength() > 0) {
+            secondPass = (this.gameLog.lastEntry().type == GameLogEntry.TYPE_PASS);
+        }
+
         this.gameLog.addEntry(GameLogEntry.TYPE_PASS, 0, 0, color) ;
 
-        if (secondPass) {
-            alert("Two consecutive passes. Now the counting phase *WOULD* come. It is under implementation...");
-
-// TODO
-// * changing phase, only in normal mode
-// * processing followups: i.e. the territory points
-//   - for each empty intersection: determine if it is encircled with only one color
-
+        if (secondPass && this.mode == GameBoard.MODE_NORMAL && this.phase == GameBoard.PHASE_NORMAL_PLAYING) {
+            this.phase = GameBoard.PHASE_NORMAL_SCORING ;
+            for(var i=0;i<this.boardSize;i++){
+                for(var j=0;j<this.boardSize;j++){
+                    var lc = this.board[i*this.boardSize+j];
+                    if (!lc || lc == GameBoardStone.COLOR_EMPTY) {
+                        var territory = new SortedSet(gameBoardStoneComparator) ;
+                        var tColor = this._walkTerritory(i,j,territory);
+                        while(!territory.isEmpty()) {
+                            var point = territory.pop() ;
+                            if (tColor == GameBoardStone.COLOR_NEUTRAL) {
+                                this._markAsNeutral(point.x,point.y);
+                            } else {
+                                this._markAsTerritory(point.x,point.y,tColor);
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -163,10 +181,15 @@ GameBoard.prototype.getNumberOfRemovedStones = function(color) {
     return this.numberOfRemovedStones[color-1] ;
 }
 
+GameBoard.prototype.getNumberOfTerritory = function(color) {
+    return this.numberOfTerritory[color-1] ;
+}
+
 GameBoard.prototype.undo = function(trimLog) {
 //TODO: In case of mode==PUZZLE, this should not go before the start-state, i.e. the initial setup
     this.board = new Array() ;
-    this.numberOfRemovedStones = new Array() ;
+    this.numberOfRemovedStones = new Array(0.0,0.0) ;
+    this.numberOfTerritory     = new Array(0.0,0.0) ;
     this.nextPlayerColor = 1 ;
     this.gameLog.undo(trimLog) ;
     this._applyLog(this.gameLog) ;
@@ -184,7 +207,8 @@ GameBoard.prototype.gotoStep = function(i) {
     if(i==this.gameLog.logLength) return ;
     if(i<this.gameLog.logLength) {
         this.board = new Array() ;
-        this.numberOfRemovedStones = new Array() ;
+        this.numberOfRemovedStones = new Array(0.0,0.0) ;
+        this.numberOfTerritory     = new Array(0.0,0.0) ;
         this.nextPlayerColor = 1 ;
         this.gameLog.gotoEntry(i) ;
         this._applyLog(this.gameLog) ;
@@ -202,6 +226,24 @@ GameBoard.prototype.getNumberOfTotalSteps = function() {
 
 GameBoard.prototype.getNumberOfCurrentStep = function() {
     return this.gameLog.getLength() ;
+}
+
+GameBoard.prototype.result = function(){
+    if (this.mode != GameBoard.MODE_NORMAL || this.phase != GameBoard.PHASE_NORMAL_SCORING) {
+      return "You can show the results only in scoring mode (it is after two consecutive passes).";
+    }
+    
+    var komi = 5.5;
+    var str = "";
+    str = str + "Komi: "+komi+"\n";
+    str = str + "Black Territory: "+this.numberOfTerritory[0]+"\n";
+    str = str + "Prisoners by Black: "+this.numberOfRemovedStones[1]+"\n";
+    str = str + "White Territory: "+this.numberOfTerritory[1]+"\n";
+    str = str + "Prisoners by Black: "+this.numberOfRemovedStones[0]+"\n";
+    blackScore = this.numberOfTerritory[0] + this.numberOfRemovedStones[1];
+    whiteScore = this.numberOfTerritory[1] + this.numberOfRemovedStones[0] + komi;
+    str = str + "Black: " + blackScore + " - White: " + whiteScore;
+    return str;
 }
 
 // -----------------------------------------------------------------------------
@@ -248,7 +290,6 @@ GameBoard.prototype._putStone = function(i, j, color, noLog) {
         this.nextPlayerColor = 2 ;
     }
 
-
     if(!noLog) {
         this.gameLog.addEntry(GameLogEntry.TYPE_PUT, i, j, color) ;
     }
@@ -257,24 +298,21 @@ GameBoard.prototype._putStone = function(i, j, color, noLog) {
 }
 
 //Marking one stone as dead
-GameBoard.prototype._markAsDead = function(i, j, color, noLog){
+GameBoard.prototype._markAsDead = function(i, j, noLog){
     var oldColor = this.board[i*this.boardSize+j] ;
     var followupType = GameLogEntry.FOLLOWUPTYPE_MARK_AS_DEAD;
 
-    if (oldColor != color) {
-        return false;
-    }
-
     var newColor;
-    if (color == 1) {
+    if (oldColor == GameBoardStone.COLOR_BLACK_STONE) {
         newColor = GameBoardStone.COLOR_DEAD_BLACK_STONE;
-    } else if (color == 2) {
+    } else if (oldColor == GameBoardStone.COLOR_WHITE_STONE) {
         newColor = GameBoardStone.COLOR_DEAD_WHITE_STONE;
     } else {
         return false;
     }
 
     this.board[i*this.boardSize+j] = newColor;
+    this.numberOfRemovedStones[oldColor-1]++ ;
 
     if(!noLog) {
         this.gameLog.addFollowup(followupType, i, j) ;
@@ -284,26 +322,21 @@ GameBoard.prototype._markAsDead = function(i, j, color, noLog){
 }
 
 //Marking one stone as living
-GameBoard.prototype._markAsLiving = function(i, j, color, noLog){
+GameBoard.prototype._markAsLiving = function(i, j, noLog){
     var oldColor = this.board[i*this.boardSize+j] ;
     var followupType = GameLogEntry.FOLLOWUPTYPE_MARK_AS_LIVING;
 
     var newColor;
-    if (color == 1) {
-        if (oldColor != GameBoardStone.COLOR_DEAD_BLACK_STONE) {
-            return false;
-        }
+    if (oldColor == GameBoardStone.COLOR_DEAD_BLACK_STONE) {
         newColor = GameBoardStone.COLOR_BLACK_STONE;
-    } else if (color == 2) {
-        if (oldColor != GameBoardStone.COLOR_DEAD_WHITE_STONE) {
-            return false;
-        }
+    } else if (oldColor == GameBoardStone.COLOR_DEAD_WHITE_STONE) {
         newColor = GameBoardStone.COLOR_WHITE_STONE;
     } else {
         return false;
     }
 
     this.board[i*this.boardSize+j] = newColor;
+    this.numberOfRemovedStones[newColor-1]-- ;
 
     if(!noLog) {
         this.gameLog.addFollowup(followupType, i, j) ;
@@ -314,23 +347,27 @@ GameBoard.prototype._markAsLiving = function(i, j, color, noLog){
 
 //Marking one empty intersection as territory
 GameBoard.prototype._markAsTerritory = function(i, j, color, noLog){
-    var oldColor = this.board[i*this.boardSize+j] ;
-    var followupType = GameLogEntry.FOLLOWUPTYPE_MARK_AS_TERRITORY;
 
-    if (oldColor != GameBoardStone.COLOR_EMPTY) {
+    var oldColor = this.board[i*this.boardSize+j] ;
+    var followupType;
+
+    if (oldColor && oldColor != GameBoardStone.COLOR_EMPTY && oldColor != GameBoardStone.COLOR_NEUTRAL) {
         return false
     }
 
     var newColor;
-    if (color == 1) {
-        newColor = GameBoardStone.COLOR_BLACK_TERRITORY;
-    } else if (color == 2) {
+    if (color == GameBoardStone.COLOR_BLACK_STONE) {
+        newColor     = GameBoardStone.COLOR_BLACK_TERRITORY;
+        followupType = GameLogEntry.FOLLOWUPTYPE_MARK_AS_TERRITORY_BLACK;
+    } else if (color == GameBoardStone.COLOR_WHITE_STONE) {
         newColor = GameBoardStone.COLOR_WHITE_TERRITORY;
+        followupType = GameLogEntry.FOLLOWUPTYPE_MARK_AS_TERRITORY_WHITE;
     } else {
         return false;
     }
 
     this.board[i*this.boardSize+j] = newColor;
+    this.numberOfTerritory[color-1]++;
 
     if(!noLog) {
         this.gameLog.addFollowup(followupType, i, j) ;
@@ -340,24 +377,32 @@ GameBoard.prototype._markAsTerritory = function(i, j, color, noLog){
 }
 
 //Marking one intersection as noone's territory
-GameBoard.prototype._markAsEmpty = function(i, j, color, noLog){
+GameBoard.prototype._markAsNeutral = function(i, j, noLog){
     var oldColor = this.board[i*this.boardSize+j] ;
-    var followupType = GameLogEntry.FOLLOWUPTYPE_MARK_AS_EMPTY;
+    if(!oldColor) {
+      oldColor = GameBoardStone.COLOR_EMPTY;
+    }
 
-    if (color == 1) {
-        if (oldColor != GameBoardStone.COLOR_BLACK_TERRITORY) {
-            return false
-        }
-    } else if (color == 2) {
-        if (oldColor != GameBoardStone.COLOR_WHITE_TERRITORY) {
-            return false
-        }
+    var followupType;
+    var color;
+
+    if (oldColor == GameBoardStone.COLOR_BLACK_TERRITORY) {
+        followupType = GameLogEntry.FOLLOWUPTYPE_MARK_AS_NEUTRAL_FROM_BLACK;
+        color = GameBoardStone.COLOR_BLACK_STONE;
+    } else if (oldColor == GameBoardStone.COLOR_WHITE_TERRITORY) {
+        followupType = GameLogEntry.FOLLOWUPTYPE_MARK_AS_NEUTRAL_FROM_WHITE;
+        color = GameBoardStone.COLOR_WHITE_STONE;
+    } else if (oldColor == GameBoardStone.COLOR_EMPTY) {
+        followupType = GameLogEntry.FOLLOWUPTYPE_MARK_AS_NEUTRAL_FROM_EMPTY;
+        color = GameBoardStone.COLOR_EMPTY;
     } else {
         return false;
     }
-    var newColor = GameBoardStone.COLOR_EMPTY;
 
-    this.board[i*this.boardSize+j] = newColor;
+    this.board[i*this.boardSize+j] = GameBoardStone.COLOR_NEUTRAL;
+    if (color) {
+        this.numberOfTerritory[color-1]--;
+    }
 
     if(!noLog) {
         this.gameLog.addFollowup(followupType, i, j) ;
@@ -466,7 +511,7 @@ GameBoard.prototype._getNeighbours = function(x, y) {
 GameBoard.prototype._walkShape = function(x, y, shape, lives) {
 
     // Only proceed if something is at x, y
-    var color = this.getField(x, y) ; 
+    var color = this.getField(x, y) ;
     if(color) {
         var openPoints = new SortedSet(gameBoardStoneComparator) ;
         
@@ -497,6 +542,60 @@ GameBoard.prototype._walkShape = function(x, y, shape, lives) {
     return shape ;
 }
 
+GameBoard.prototype._walkTerritory = function(x, y, territory) {
+
+    var whoseTerritory = GameBoardStone.COLOR_NOT_KNOWN;
+    var color = this.getField(x, y) ;
+    if (!color) {
+        color = GameBoardStone.COLOR_EMPTY;
+    }
+    if( color != GameBoardStone.COLOR_BLACK_STONE &&
+        color != GameBoardStone.COLOR_WHITE_STONE ) {
+        var openPoints = new SortedSet(gameBoardStoneComparator) ;
+
+        // seed the open points with the current point...
+        openPoints.insert(new GameBoardStone(x, y, color)) ;
+
+        // while there are open points, try to close them...
+        while(!openPoints.isEmpty()) {
+            var openPoint = openPoints.pop() ;
+            var neighbours = this._getNeighbours(openPoint.x, openPoint.y) ;
+
+            while(!neighbours.isEmpty()) {
+                var neighbour = neighbours.pop() ;
+
+                if( neighbour.color != GameBoardStone.COLOR_BLACK_STONE &&
+                    neighbour.color != GameBoardStone.COLOR_WHITE_STONE &&
+                    !territory.contains(neighbour) ) {
+                    openPoints.insert(neighbour) ;
+                }
+
+                if (whoseTerritory  == GameBoardStone.COLOR_NOT_KNOWN &&
+                    neighbour.color == GameBoardStone.COLOR_BLACK_STONE ) {
+                    whoseTerritory = GameBoardStone.COLOR_BLACK_STONE;
+                } else if (whoseTerritory  == GameBoardStone.COLOR_NOT_KNOWN &&
+                    neighbour.color == GameBoardStone.COLOR_WHITE_STONE ) {
+                    whoseTerritory = GameBoardStone.COLOR_WHITE_STONE;
+                } else if (whoseTerritory == GameBoardStone.COLOR_BLACK_STONE &&
+                           neighbour.color == GameBoardStone.COLOR_WHITE_STONE ) {
+                    whoseTerritory = GameBoardStone.COLOR_NEUTRAL;
+                } else if (whoseTerritory == GameBoardStone.COLOR_WHITE_STONE &&
+                           neighbour.color == GameBoardStone.COLOR_BLACK_STONE ) {
+                    whoseTerritory = GameBoardStone.COLOR_NEUTRAL;
+                }
+            }
+
+            territory.insert(openPoint) ;
+        }
+    }
+
+    if (whoseTerritory == GameBoardStone.COLOR_NOT_KNOWN) {
+        whoseTerritory = GameBoardStone.COLOR_NEUTRAL;
+    }
+    return whoseTerritory ;
+}
+
+
 GameBoard.prototype._removeShape = function (shape) {
     for(var i=0; i<shape.data.length; i++) {
         var stone = shape.data[i] ;
@@ -517,7 +616,25 @@ GameBoard.prototype._applyLog = function (log, from) {
             this.pass(s.color, true) ;
             for(var fi in s.followup){
                 var f = s.followup[fi];
-                this._markAsTerritory(f.i, f.j, s.color, true);
+                if (f.type == GameLogEntry.FOLLOWUPTYPE_MARK_AS_TERRITORY_BLACK) {
+                  this._markAsTerritory(f.i, f.j, GameBoardStone.COLOR_BLACK_STONE, true);
+                } else if (f.type == GameLogEntry.FOLLOWUPTYPE_MARK_AS_TERRITORY_WHITE) {
+                  this._markAsTerritory(f.i, f.j, GameBoardStone.COLOR_WHITE_STONE, true);
+                } else if (f.type == GameLogEntry.FOLLOWUPTYPE_MARK_AS_NEUTRAL_FROM_EMPTY) {
+                  this._markAsNeutral(f.i, f.j, true);
+                }
+            }
+            if (this.mode == GameBoard.MODE_NORMAL && this.phase == GameBoard.PHASE_NORMAL_PLAYING) {
+                var secondPass = false;
+                if (i>0) {
+                    var s = log.getEntry(i-1);
+                    if (s.type == GameLogEntry.TYPE_PASS) {
+                        secondPass = true;
+                    }
+                }
+                if (secondPass) {
+                    this.phase = GameBoard.PHASE_NORMAL_SCORING ;
+                }
             }
         }
         else if(s.type == GameLogEntry.TYPE_SET) {
@@ -539,20 +656,29 @@ GameBoard.prototype._applyLog = function (log, from) {
         else if(s.type == GameLogEntry.TYPE_MARK) {
             for(var fi in s.followup) {
                 var f = s.followup[fi] ;
-                if (f.type == GameLogEntry.FOLLOWUPTYPE_MARK_AS_TERRITORY) {
-                    this._markAsTerritory(f.i, f.j, s.color, true);
-                } else if (f.type == GameLogEntry.FOLLOWUPTYPE_MARK_AS_EMPTY) {
-                    this._markAsEmpty(f.i, f.j, s.color, true);
-                } else if (f.type == GameLogEntry.FOLLOWUPTYPE_MARK_AS_DEAD) {
-                    this._markAsDead(f.i, f.j, s.color, true);
-                } else if (f.type == GameLogEntry.FOLLOWUPTYPE_MARK_AS_LIVING) {
-                    this._markAsLiving(f.i, f.j, s.color, true);
+                switch (f.type) {
+                    case GameLogEntry.FOLLOWUPTYPE_MARK_AS_DEAD:
+                        this._markAsDead(f.i, f.j, true);
+                        break;
+                    case GameLogEntry.FOLLOWUPTYPE_MARK_AS_LIVING:
+                        this._markAsLiving(f.i, f.j, true);
+                        break;
+                    case GameLogEntry.FOLLOWUPTYPE_MARK_AS_TERRITORY_BLACK:
+                        this._markAsTerritory(f.i, f.j, GameBoardStone.COLOR_BLACK_STONE, true);
+                        break;
+                    case GameLogEntry.FOLLOWUPTYPE_MARK_AS_TERRITORY_WHITE:
+                        this._markAsTerritory(f.i, f.j, GameBoardStone.COLOR_WHITE_STONE, true);
+                        break;
+                    case GameLogEntry.FOLLOWUPTYPE_MARK_AS_NEUTRAL_FROM_BLACK:
+                    case GameLogEntry.FOLLOWUPTYPE_MARK_AS_NEUTRAL_FROM_WHITE:
+                    case GameLogEntry.FOLLOWUPTYPE_MARK_AS_NEUTRAL_FROM_EMPTY:
+                        this._markAsNeutral(f.i, f.j, true);
+                        break;
                 }
             }
-
         }
     }
-    
+
     this.gameLog = log ;
 }
 
