@@ -1,4 +1,4 @@
-#summary Using themes.
+#summary About themes, how to use them, how to create them.
 #labels Featured,Phase-Deploy
 
 = Introduction =
