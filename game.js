@@ -128,9 +128,14 @@ Game.prototype.pass = function() {
                                                  this.gameBoard.nextPlayerColor)) {
         return ;
     }
-    
+
     this.gameBoard.pass(this.gameBoard.nextPlayerColor) ;
     this._renderBoardAbstract();
+}
+
+Game.prototype.result = function() {
+    var str = this.gameBoard.result();
+    alert(str);
 }
 
 Game.prototype.gotoStep = function(i) {
@@ -333,7 +338,11 @@ Game.prototype._setStone = function(i, j, color, last, ko) {
     if (!color) {
         color = GameBoardStone.COLOR_EMPTY;
     }
-
+/*
+    if (color == GameBoardStone.COLOR_NEUTRAL) {
+        color = GameBoardStone.COLOR_EMPTY;
+    }
+*/
     if (color != GameBoardStone.COLOR_EMPTY) {
         if (color == GameBoardStone.COLOR_BLACK_STONE) {
             if (!last) {
@@ -355,6 +364,8 @@ Game.prototype._setStone = function(i, j, color, last, ko) {
               src = this.blackTerritoryImageUrl ;
         } else if (color == GameBoardStone.COLOR_WHITE_TERRITORY) {
               src = this.whiteTerritoryImageUrl ;
+        } else if (color == GameBoardStone.COLOR_NEUTRAL) {
+              src = this.koImageUrl ;
         }
         visibility = "visible" ;
     } else {
