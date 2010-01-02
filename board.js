@@ -346,16 +346,20 @@ GameBoard.prototype._markAsDeadStone = function(i, j, noLog){
     var followupType = GameLogEntry.FOLLOWUPTYPE_MARK_AS_DEAD;
 
     var newColor;
+    var otherColor;
     if (oldColor == GameBoardStone.COLOR_BLACK_STONE) {
         newColor = GameBoardStone.COLOR_DEAD_BLACK_STONE;
+        otherColor = GameBoardStone.COLOR_WHITE_STONE;
     } else if (oldColor == GameBoardStone.COLOR_WHITE_STONE) {
         newColor = GameBoardStone.COLOR_DEAD_WHITE_STONE;
+        otherColor = GameBoardStone.COLOR_BLACK_STONE;
     } else {
         return false;
     }
 
     this.board[i*this.boardSize+j] = newColor;
     this.numberOfRemovedStones[oldColor-1]++ ;
+    this.numberOfTerritory[otherColor-1]++ ;
 
     if(!noLog) {
         this.gameLog.addFollowup(followupType, i, j) ;
@@ -370,16 +374,20 @@ GameBoard.prototype._markAsLivingStone = function(i, j, noLog){
     var followupType = GameLogEntry.FOLLOWUPTYPE_MARK_AS_LIVING;
 
     var newColor;
+    var otherColor;
     if (oldColor == GameBoardStone.COLOR_DEAD_BLACK_STONE) {
         newColor = GameBoardStone.COLOR_BLACK_STONE;
+        otherColor = GameBoardStone.COLOR_WHITE_STONE;
     } else if (oldColor == GameBoardStone.COLOR_DEAD_WHITE_STONE) {
         newColor = GameBoardStone.COLOR_WHITE_STONE;
+        otherColor = GameBoardStone.COLOR_BLACK_STONE;
     } else {
         return false;
     }
 
     this.board[i*this.boardSize+j] = newColor;
     this.numberOfRemovedStones[newColor-1]-- ;
+    this.numberOfTerritory[otherColor-1]-- ;
 
     if(!noLog) {
         this.gameLog.addFollowup(followupType, i, j) ;
