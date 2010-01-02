@@ -357,11 +357,12 @@ Game.prototype._onClick = function(i, j) {
         return ;
     }
 
-    if(!this.participantFilter) return ;
-
-    if(!this.participantFilter.isParticipantTurn(wave.getViewer().getId(),
-                                                 this.gameBoard.nextPlayerColor)) {
-        return ;
+    if (this.gameBoard.mode == GameBoard.MODE_NORMAL && this.gameBoard.phase == GameBoard.PHASE_NORMAL_PLAYING) {
+        if(!this.participantFilter) return ;
+        if(!this.participantFilter.isParticipantTurn(wave.getViewer().getId(),
+                                                     this.gameBoard.nextPlayerColor)) {
+            return ;
+        }
     }
     this.gameBoard.onClick(i, j, this.gameBoard.nextPlayerColor) ;
     this._renderBoardAbstract();
