@@ -66,7 +66,7 @@ Game.prototype.openParticipantFilterUI = function() {
     this.participantController.setVisible(true) ;
 }
 
-Game.prototype.onClickOnBoard = function(event) {
+Game.prototype.onClickOnBoardImg = function(event) {
 
     if(this.state != (Game.STATE_THEME_LOADED | Game.STATE_WAVE_STATE_LOADED))
         return ;
@@ -80,14 +80,14 @@ Game.prototype.onClickOnBoard = function(event) {
         var offsetLeft = 0 ;
         var offsetTop = 0 ;
         var obj = this.boardImage ;
-        
+
         if(obj.offsetParent) {
             do {
                 offsetLeft += obj.offsetLeft ;
                 offsetTop += obj.offsetTop ;
             } while( obj=obj.offsetParent ) ;
         }
-            
+
         x = event.pageX - offsetLeft ;
         y = event.pageY - offsetTop ;
     }
@@ -96,19 +96,13 @@ Game.prototype.onClickOnBoard = function(event) {
 
     i = this.boardGeometry.getIndexForX(x) ;
     j = this.boardGeometry.getIndexForY(y) ;
-
-    if(i>=this.boardSize || j>=this.boardSize || i<0 || j<0) {
-        return ;
-    }
-
-    if(!this.participantFilter) return ;
     
-    if(!this.participantFilter.isParticipantTurn(wave.getViewer().getId(),
-                                                 this.gameBoard.nextPlayerColor)) {
-        return ;
-    }
-    this.gameBoard.makeMove(i, j, this.gameBoard.nextPlayerColor) ;
-    this._renderBoardAbstract();
+    this._onClick(i,j);
+
+}
+
+Game.prototype.onClickOnStoneImg = function(event,i,j) {
+    this._onClick(i,j);
 }
 
 Game.prototype.undo = function(trimLog) {
@@ -299,10 +293,10 @@ Game.prototype._resetBoardUI = function() {
         gadgets.window.adjustHeight();
     };
     this.boardImage.src = this.boardImageUrl ;
-    this._registerOnClick() ;
+    this._registerOnClickBoardImg() ;
 
     this.div.appendChild(this.boardImage) ;
-    
+
     // Add stones
     this.stoneImages = new Array() ;
 
@@ -310,9 +304,9 @@ Game.prototype._resetBoardUI = function() {
         for(j=0; j<this.boardSize; j++) {
             var im = document.createElement("IMG") ;
             im.src = this.blackStoneImageUrl ;
+
             var x
             var y ;
-            
             x = Math.round(this.boardGeometry.getXforIndex(i) - this.stoneGeometry.width/2) ;
             y = Math.round(this.boardGeometry.getYforIndex(j) - this.stoneGeometry.height/2) ;
 
@@ -322,15 +316,24 @@ Game.prototype._resetBoardUI = function() {
             im.style.visibility = "hidden" ;
             im.style.left = x+"px" ;
             im.style.top = y+"px" ;
+            this._registerOnClickStoneImg(i,j);
         }
     }
 }
 
-Game.prototype._registerOnClick = function() {
+Game.prototype._registerOnClickBoardImg = function() {
     var self = this ;
     this.boardImage.onclick = function (event) {
-        self.onClickOnBoard(event) ;
+        self.onClickOnBoardImg(event) ;
     }
+}
+
+Game.prototype._registerOnClickStoneImg = function(i, j) {
+    var self = this ;
+    var img = this.stoneImages[i*this.boardSize+j];
+    img.onclick = function (event) {
+        self.onClickOnStoneImg(event,i,j) ;
+    };
 }
 
 Game.prototype._renderBoard = function() {
@@ -346,6 +349,22 @@ Game.prototype._renderBoard = function() {
             this._setStone(i, j, color, last, ko) ;
         }
     }
+}
+
+Game.prototype._onClick = function(i, j) {
+
+    if(i>=this.boardSize || j>=this.boardSize || i<0 || j<0) {
+        return ;
+    }
+
+    if(!this.participantFilter) return ;
+
+    if(!this.participantFilter.isParticipantTurn(wave.getViewer().getId(),
+                                                 this.gameBoard.nextPlayerColor)) {
+        return ;
+    }
+    this.gameBoard.onClick(i, j, this.gameBoard.nextPlayerColor) ;
+    this._renderBoardAbstract();
 }
 
 Game.prototype._setStone = function(i, j, color, last, ko) {

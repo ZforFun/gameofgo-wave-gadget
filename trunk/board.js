@@ -73,8 +73,18 @@ function GameBoard(boardSize) {
 // ----- Class: GameBoard ------------------------------------------------------
 // ----- Public Methods   ------------------------------------------------------
 
+// Called to handle click. This method distributes the event based on the mode and phase
+GameBoard.prototype.onClick = function (i, j, color) {
+    if (this.mode == GameBoard.MODE_NORMAL && this.phase == GameBoard.PHASE_NORMAL_PLAYING) {
+        this.makeMove(i, j, color) ;
+    } else if (this.mode == GameBoard.MODE_NORMAL && this.phase == GameBoard.PHASE_NORMAL_SCORING) {
+        alert("Marking/unmarking dead stones... Under implementation. ("+i+","+j+")");
+    }
+}
+
+
 // Called to perform a legal Go move. Writes log.
-GameBoard.prototype.makeMove = function (x, y, color) {
+GameBoard.prototype.makeMove = function (i, j, color) {
 
     if ( this.mode == GameBoard.MODE_SETUP ||
          ( this.mode == GameBoard.MODE_NORMAL && this.phase != GameBoard.PHASE_NORMAL_PLAYING ) ) {
@@ -88,10 +98,12 @@ GameBoard.prototype.makeMove = function (x, y, color) {
         color = this.nextPlayerColor ;
     }
 
-    moveResult = this._tryToApplyStepToBoard(x, y, color);
+    moveResult = this._tryToApplyStepToBoard(i, j, color);
 
     if(moveResult != GameBoard.MOVE_OK) {
-        this.undo(/*trimLog=*/true) ;
+        if (moveResult!=GameBoard.MOVE_ERROR_OCCUPIED) {
+            this.undo(/*trimLog=*/true) ;
+        }
         MessageManager.getInstance().createDismissibleMessage("Wrong move. Error code: "+moveResult+".\n(1:Alr.Occ; 2:Suicide; 3:Ko)");
         return moveResult ;
     }
@@ -415,10 +427,10 @@ GameBoard.prototype._tryToApplyStepToBoard = function(x, y, color) {
     if(!this._putStone(x, y, color)) {
         return GameBoard.MOVE_ERROR_OCCUPIED ;
     }
-    
-    if (this.ko.ko && x==this.ko.i && y==this.ko.y) {
+
+    if (this.ko.ko && x==this.ko.i && y==this.ko.j) {
         return GameBoard.MOVE_ERROR_KO ;
-    } 
+    }
 
     var otherColor = 1;
     if(color == 1) otherColor = 2 ;
@@ -457,7 +469,7 @@ GameBoard.prototype._tryToApplyStepToBoard = function(x, y, color) {
         if(!lives.isEmpty()>=1) {
             moveResult = GameBoard.MOVE_OK ;
         }
-    } 
+    }
 
 //Determining the forbidden place once a Ko occured (checking the simple ko-rule)
     this.ko.ko = false;
