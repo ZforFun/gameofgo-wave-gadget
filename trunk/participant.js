@@ -49,7 +49,7 @@ ParticipantFilter.prototype.getPlayerColor = function(participantId, noWildcardF
     return this.participantMap_["*"] ;
 }
 
-ParticipantFilter.prototype.isParticipantTurn = function(participantId, color) {
+ParticipantFilter.prototype.isColorOfParticipant = function(participantId, color) {
     var playerColor = this.getPlayerColor(participantId) ;
 
     if(playerColor == color) return true ;

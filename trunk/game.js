@@ -118,7 +118,7 @@ Game.prototype.redo = function() {
 Game.prototype.pass = function() {
     if(!this.participantFilter) return ;
 
-    if(!this.participantFilter.isParticipantTurn(wave.getViewer().getId(),
+    if(!this.participantFilter.isColorOfParticipant(wave.getViewer().getId(),
                                                  this.gameBoard.nextPlayerColor)) {
         return ;
     }
@@ -357,13 +357,19 @@ Game.prototype._onClick = function(i, j) {
         return ;
     }
 
+    if(!this.participantFilter) return ;
     if (this.gameBoard.mode == GameBoard.MODE_NORMAL && this.gameBoard.phase == GameBoard.PHASE_NORMAL_PLAYING) {
-        if(!this.participantFilter) return ;
-        if(!this.participantFilter.isParticipantTurn(wave.getViewer().getId(),
+        if(!this.participantFilter.isColorOfParticipant(wave.getViewer().getId(),
                                                      this.gameBoard.nextPlayerColor)) {
             return ;
         }
+    } else if (this.gameBoard.mode == GameBoard.MODE_NORMAL && this.gameBoard.phase == GameBoard.PHASE_NORMAL_SCORING) {
+        if(!this.participantFilter.isColorOfParticipant(wave.getViewer().getId(), GameBoardStone.COLOR_BLACK_STONE) &&
+           !this.participantFilter.isColorOfParticipant(wave.getViewer().getId(), GameBoardStone.COLOR_WHITE_STONE)) {
+            return ;
+        }
     }
+
     this.gameBoard.onClick(i, j, this.gameBoard.nextPlayerColor) ;
     this._renderBoardAbstract();
 }
