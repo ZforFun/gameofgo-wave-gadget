@@ -46,6 +46,7 @@ GameBoard.MOVE_ERROR_OCCUPIED = 1 ;
 GameBoard.MOVE_ERROR_SUICIDE  = 2 ;
 GameBoard.MOVE_ERROR_KO       = 3 ;
 GameBoard.MOVE_ERROR_MODE     = 4 ;
+GameBoard.MOVE_ERROR_NO_TERR  = 5 ;
 
 GameBoard.MODE_NORMAL  = 1;
 GameBoard.MODE_SETUP   = 2;
@@ -79,7 +80,6 @@ GameBoard.prototype.onClick = function (i, j, color) {
     if (this.mode == GameBoard.MODE_NORMAL && this.phase == GameBoard.PHASE_NORMAL_PLAYING) {
         this.makeMove(i, j, color) ;
     } else if (this.mode == GameBoard.MODE_NORMAL && this.phase == GameBoard.PHASE_NORMAL_SCORING) {
-//        alert("Marking/unmarking dead stones... Under implementation. ("+i+","+j+")");
         this.mark(i,j);
     }
 }
@@ -102,13 +102,11 @@ GameBoard.prototype.mark = function(i, j) {
             moveResult = this._markAsLiving(i,j);
             break;
         case GameBoardStone.COLOR_BLACK_TERRITORY:
-            //TODO
-            break;
         case GameBoardStone.COLOR_WHITE_TERRITORY:
-            //TODO
+            moveResult = this._markAsNeutral(i,j);
             break;
         case GameBoardStone.COLOR_NEUTRAL:
-            //TODO
+            moveResult = this._markAsTerritory(i,j);
             break;
     }
     return moveResult ;
@@ -575,6 +573,80 @@ GameBoard.prototype._markAsLiving = function(i,j){
     return moveResult;
 }
 
+GameBoard.prototype._markAsNeutral = function(i,j){
+    var moveResult = GameBoard.MOVE_OK;
+
+    var oldColor = this.getField(i,j);
+    var moveColor;
+    var edgeColor;
+    if (oldColor == GameBoardStone.COLOR_BLACK_TERRITORY) {
+        moveColor = GameBoardStone.COLOR_WHITE_STONE;
+        edgeColor = GameBoardStone.COLOR_BLACK_STONE;
+    } else if (oldColor == GameBoardStone.COLOR_WHITE_TERRITORY) {
+        moveColor = GameBoardStone.COLOR_BLACK_STONE;
+        edgeColor = GameBoardStone.COLOR_WHITE_STONE;
+    } else {
+        return GameBoard.MOVE_ERROR;
+    }
+
+    var shape = new SortedSet(gameBoardStoneComparator) ;
+    var lives = new SortedSet(gameBoardStoneComparator) ;
+    this._walkShape(i, j, shape, lives, true) ;
+//This operation is allowed only if there is no dead-stone in the picture
+//Basically it is for those territories which belongs to a seki (cluster in dual life)
+    for(var k=0;k<lives.data.length;k++){
+        if (lives.data[k].color != edgeColor) {
+            return GameBoard.MOVE_ERROR_NO_TERR;
+        }
+    }
+
+    this.gameLog.addEntry(GameLogEntry.TYPE_MARK, i, j, moveColor) ;
+    while(!shape.isEmpty()) {
+        var point = shape.pop() ;
+        if (point.color != GameBoardStone.COLOR_NEUTRAL) {
+            this._markAsNeutralField(point.i, point.j) ;
+        }
+    }
+
+    return moveResult;
+}
+
+GameBoard.prototype._markAsTerritory = function(i,j){
+    var moveResult = GameBoard.MOVE_OK;
+    var oldColor = this.getField(i,j);
+
+    if (oldColor != GameBoardStone.COLOR_NEUTRAL) {
+        return GameBoard.MOVE_ERROR;
+    }
+
+    var territory = new SortedSet(gameBoardStoneComparator) ;
+    var tColor = this._walkTerritory(i,j,territory);
+
+    if (tColor == GameBoardStone.COLOR_NEUTRAL) {
+        return GameBoard.MOVE_ERROR_NO_TERR;
+    }
+
+    var moveColor;
+    if (tColor == GameBoardStone.COLOR_BLACK_TERRITORY) {
+        moveColor = GameBoardStone.COLOR_BLACK_STONE;
+    } else {
+        moveColor = GameBoardStone.COLOR_WHITE_STONE;
+    }
+    this.gameLog.addEntry(GameLogEntry.TYPE_MARK, i, j, moveColor) ;
+
+    var shape = new SortedSet(gameBoardStoneComparator) ;
+    var lives = new SortedSet(gameBoardStoneComparator) ;
+    this._walkShape(i, j, shape, lives) ;
+    while(!shape.isEmpty()) {
+        var point = shape.pop() ;
+        if (point.color != tColor) {
+            this._markAsTerritoryField(point.i, point.j, tColor) ;
+        }
+    }
+
+    return moveResult;
+}
+
 
 GameBoard.prototype._tryToApplyStepToBoard = function(x, y, color) {
     if(!this._putStone(x, y, color)) {
@@ -673,7 +745,7 @@ GameBoard.prototype._getNeighbours = function(x, y) {
     return rv ;
 }
 
-GameBoard.prototype._walkShape = function(x, y, shape, lives) {
+GameBoard.prototype._walkShape = function(x, y, shape, lives, livesWithNeighbours) {
 
     // Only proceed if something is at x, y
     var color = this.getField(x, y) ;
@@ -695,9 +767,12 @@ GameBoard.prototype._walkShape = function(x, y, shape, lives) {
                     openPoints.insert(neighbour) ;
                 }
                 
-                if(!neighbour.color && !lives.contains(neighbour)) {
+                if( neighbour.color != color &&
+                    (!neighbour.color || livesWithNeighbours) && 
+                    !lives.contains(neighbour)) {
                     lives.insert(neighbour) ;
                 }
+
             }
             
             shape.insert(openPoint) ;
