@@ -1,3 +1,43 @@
+function AudioNotificationPlayer(soundFiles) {
+
+    var probablyPlayable = "" ;
+    var maybePlayable = "" ;
+    for(var i=0; i<soundFiles.length; i++) {
+        var a = new Audio() ;
+        if(!a) return ;
+        
+        var type = soundFiles[i].type || "" ;
+        var canPlayType = a.canPlayType(type) ;
+        
+        if(canPlayType == "probably" && probablyPlayable == "") {
+            probablyPlayable = soundFiles[i].file || "" ;
+        }
+
+        if(canPlayType == "maybe" && maybePlayable == "") {
+            maybePlayable = soundFiles[i].file || "" ;
+        }
+    }
+    
+    this.file = probablyPlayable ;
+    if(this.file == "") {
+        this.file = maybePlayable ;
+    }
+
+    this.audio = null ;
+}
+
+AudioNotificationPlayer.prototype.load = function() {
+    this.audio = new Audio(this.file) ;
+    this.audio.load() ;
+}
+
+AudioNotificationPlayer.prototype.play = function() {
+    if(!this.audio) {
+        this.load() ;
+    }
+    this.audio.play() ;
+}
+
 // ----------------------------------------------------------
 // ----- Class: ThemeManager --------------------------------
 // ----------------------------------------------------------
@@ -53,6 +93,9 @@ ThemeManager.prototype.onThemeUrlFetched = function(obj) {
     this.blackTerritoryImageUrl = this.urlBase ;
     this.whiteTerritoryImageUrl = this.urlBase ;
     this.koImageUrl             = this.urlBase ;
+    
+    this.boardChangedAudioNotificationUrls = [] ;
+    //  audio/wav, audio/x-wav, audio/wave, audio/x-pn-wav
 
 
     // Get root element
@@ -84,7 +127,8 @@ ThemeManager.prototype.onThemeUrlFetched = function(obj) {
                              this.koImageUrl,
                              this.boardSize,
                              this.boardGeometry,
-                             this.stoneGeometry) ;
+                             this.stoneGeometry,
+                             this.boardChangedAudioNotificationUrls) ;
 }
 
 ThemeManager.prototype.processBoardItem = function(board) {
@@ -96,6 +140,8 @@ ThemeManager.prototype.processBoardItem = function(board) {
             this.boardSize = parseInt(item.firstChild.nodeValue) ;
         } else if(item.nodeName=="image") {
             this.processBoardImageItem(item) ;
+        } else if(item.nodeName=="audioNotification") {
+            this.processBoardAudioNotificationItem(item) ;
         }
     }  
 }
@@ -126,6 +172,22 @@ ThemeManager.prototype.processBoardImageItem = function(image) {
     }
 
     this.boardGeometry = new GameBoardGeometry(lo, hg, to, vg) ;
+}
+
+
+ThemeManager.prototype.processBoardAudioNotificationItem = function(audioNotification) {
+    var typeAttribute = audioNotification.getAttribute("type") ;
+    if(typeAttribute != "boardChange") return ;
+
+    for(var i=0; i<audioNotification.childNodes.length; i++) {
+        var item = audioNotification.childNodes.item(i) ;
+        if(item.nodeName == "audio") {
+            var obj = {type:'', file:''} ;
+            obj.type = ""+item.getAttribute("type") ;
+            obj.file = ""+this.urlBase+item.getAttribute("src") ;
+            this.boardChangedAudioNotificationUrls.push(obj) ;
+        }
+    }
 }
 
 ThemeManager.prototype.processStoneItem = function(stone) {
@@ -181,6 +243,9 @@ ThemeManager.prototype.processStoneItem = function(stone) {
 
 function DummyThemeManager(game, url) {
     var prefix = "themes/basic-theme/" ;
+    var boardChangedAudioNotification = [] ;
+    boardChangedAudioNotification.push({type: "audio/ogg", file:prefix+"boardChange.ogg"}) ;
+    boardChangedAudioNotification.push({type: "audio/mp3", file:prefix+"boardChange.mp3"}) ;
     game._onThemeChange(prefix,
                         prefix+"board.png",
                         prefix+"black.png",
@@ -194,7 +259,8 @@ function DummyThemeManager(game, url) {
                         prefix+"ko.png",
                         19,
                         new GameBoardGeometry(20, 32, 20, 32),
-                        new GameStoneGeometry(24, 24)) ;
+                        new GameStoneGeometry(24, 24),
+                        boardChangedAudioNotification) ;
 }
 
 // ----------------------------------------------------------

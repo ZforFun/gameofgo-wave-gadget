@@ -10,6 +10,11 @@
       <verticalGap>23</verticalGap>
       <horizontalGap>23</horizontalGap>
     </image>
+    <audioNotification type="boardChange">
+      <audio type="audio/ogg" src="audio/boardChangeNotification.ogg"/>
+      <audio type="audio/mp3" src="audio/boardChangeNotification.mp3"/>
+      <audio type="audio/wav" src="audio/boardChangeNotification.wav"/>
+    </audioNotification>
   </board>
   <stone>
     <width>23</width>

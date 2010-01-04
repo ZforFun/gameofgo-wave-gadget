@@ -977,7 +977,7 @@ SimpleParser.prototype.construct = function() {
     var log = new GameLog() ;
     log.deSerialize(d.gameLog);
 
-    gameBoard.mode = d.mode ;
+    gameBoard.mode = d.mode || GameBoard.MODE_NORMAL;
     gameBoard._applyLog(log) ;
     gameBoard.nextPlayerColor = d.nextPlayerColor ;
 

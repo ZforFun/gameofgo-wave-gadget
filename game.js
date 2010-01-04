@@ -180,7 +180,8 @@ Game.prototype._initializeAppearance = function(boardImageUrl,
                                                blackLastStoneImageUrl, whiteLastStoneImageUrl,
                                                blackDeadStoneImageUrl, whiteDeadStoneImageUrl,
                                                blackTerritoryImageUrl, whiteTerritoryImageUrl,
-                                               koImageUrl, boardSize, boardGeometry, stoneGeometry) {
+                                               koImageUrl, boardSize, boardGeometry, stoneGeometry,
+                                               boardChangeAudioNotificationUrls) {
 //TODO: After separating boardsize & theme, the codes below might change
     var result = 1;
     if(this.boardSize && (this.boardSize != boardSize)) {
@@ -212,6 +213,9 @@ Game.prototype._initializeAppearance = function(boardImageUrl,
     this.boardGeometry = boardGeometry ;
     this.stoneGeometry = stoneGeometry ;
 
+    this.boardChangedAudioNotificationPlayer =
+        new AudioNotificationPlayer(boardChangeAudioNotificationUrls) ;
+
     this.state |= Game.STATE_THEME_LOADED  ;
     return result;
 }
@@ -222,13 +226,15 @@ Game.prototype._onThemeChange = function(themeUrl,
                                         blackLastStoneImageUrl, whiteLastStoneImageUrl,
                                         blackDeadStoneImageUrl, whiteDeadStoneImageUrl,
                                         blackTerritoryImageUrl, whiteTerritoryImageUrl,
-                                        koImageUrl, boardSize, boardGeometry, stoneGeometry) {
+                                        koImageUrl, boardSize, boardGeometry, stoneGeometry,
+                                        boardChangeAudioNotificationUrls) {
     var res = this._initializeAppearance(boardImageUrl,
                               blackStoneImageUrl, whiteStoneImageUrl,
                               blackLastStoneImageUrl, whiteLastStoneImageUrl,
                               blackDeadStoneImageUrl, whiteDeadStoneImageUrl,
                               blackTerritoryImageUrl, whiteTerritoryImageUrl,
-                              koImageUrl, boardSize, boardGeometry, stoneGeometry) ;
+                              koImageUrl, boardSize, boardGeometry, stoneGeometry,
+                              boardChangeAudioNotificationUrls) ;
 //TODO: After separating boardsize & theme, the codes below might change
     if (!res) return;
 
@@ -438,10 +444,10 @@ Game.prototype._renderBoardAbstract = function() {
 }
 
 Game.prototype._saveStateToWave = function() {
-    if(typeof wave == 'undefined') return ;
-
     var delta = {} ;
     var change = false ;
+
+    if(typeof wave == 'undefined') return change;
     
     // Transmit board
 
@@ -474,8 +480,16 @@ Game.prototype._restoreStateFromWave = function() {
 
     var gameBoard = wave.getState().get('gameBoard') ;
     if(gameBoard) {
+        var s = new SimpleSerializer(this.gameBoard) ;
+        var oldBoard = s.serialize() ;
+
         var p = new SimpleParser(gameBoard) ;
         this.gameBoard = p.construct() ;
+
+        if(oldBoard != gameBoard) {
+            // State really changed
+            this.boardChangedAudioNotificationPlayer.play() ;
+        }
     }
 
     var participantFilter = wave.getState().get('participantFilter') ;
