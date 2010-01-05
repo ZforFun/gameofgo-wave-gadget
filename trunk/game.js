@@ -215,6 +215,7 @@ Game.prototype._initializeAppearance = function(boardImageUrl,
 
     this.boardChangedAudioNotificationPlayer =
         new AudioNotificationPlayer(boardChangeAudioNotificationUrls) ;
+    this.boardChangedAudioNotificationPlayer.load() ;
 
     this.state |= Game.STATE_THEME_LOADED  ;
     return result;
