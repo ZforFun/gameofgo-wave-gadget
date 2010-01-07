@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Module>
+  <ModulePrefs title="Game of Go Gadget" scrolling="true"> 
+    <Require feature="setprefs" />
+<!--
+    <Require feature="views" />
+-->
+    <Require feature="wave" />
+    <Require feature="dynamic-height" />
+    <Require feature="minimessage"/>
+  </ModulePrefs>
+  <UserPref name="themeUrl"
+            display_name="Theme Url"
+            default_value="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/themes/wooden-theme/"/>
+<!--
+  <Content type="html" view="canvas,home">
+-->
+  <Content type="html">
+    <![CDATA[
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/game.js"></script>
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/board.js"></script>
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/log.js"></script>
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/thememanager.js"></script>
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/utils.js"></script>
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/participant.js"></script>
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/logview.js"></script>
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/sgf.js"></script>
+      <div id="main_div" style="position:relative">
+        <table>
+          <tr>
+            <td><a href="" onclick="game.newSimpleGame();return false;"><b>New Game (alternating players)</b></a></td>
+            <td><a href="" onclick="game.newAllPlayersCanPlayGame();return false;"><b>New Game (all players move)</b></a></td>
+            <td><a href="" onclick="game.openParticipantFilterUI();return false;">Players</a></td>
+          </tr>
+        </table>
+        <table>
+          <tr>
+            <td><a href="" onclick="game.gotoFirstStep();return false;">First</a></td>
+            <td><a href="" onclick="game.undo();return false;">Undo</a></td>
+            <td><a href="" onclick="game.redo();return false;">Redo</a></td>
+            <td><a href="" onclick="game.gotoLastStep();return false;">Last</a></td>
+            <td><a href="" onclick="game.pass();return false;">Pass</a></td>
+            <td><a href="" onclick="game.result();return false;">Result</a></td>
+          </tr>
+        </table>
+        <table>
+          <tr>
+            <td><input type="text" id="themeUrl"/></td>
+            <td><a href="" onclick="changeTheme();return false;">Change</a></td>
+          </tr>
+        </table>
+        <table>
+          <tr>
+            <td><a href="" onclick="alert( game.exportToSGF() ); return false;">Export to SGF</a></td>
+            <td><a href="" onclick="document.getElementById('divSGF').style.visibility='visible';return false;">Import from SGF</a></td>
+          </tr>
+        </table>
+        <div id="board_div" style="position:relative"/>
+      </div>
+      <script type="text/javascript">
+        var prefs = new gadgets.Prefs();
+        var themeUrl = prefs.getString('themeUrl') ;
+        var game = new Game(document.getElementById("board_div"), themeUrl) ;
+        var myModuleId = __MODULE_ID__ ;
+        
+        if(!themeUrl) {
+          themeUrl = "http://gameofgo-wave-gadget.googlecode.com/svn/trunk/themes/basic-theme/" ;
+        }
+        var themeManager = new ThemeManager(game, themeUrl) ;
+        themeManager.loadTheme() ;
+        function changeTheme() {
+           var themeUrl = document.getElementById('themeUrl').value ;
+           game.initiateChangeTheme(themeUrl) ;
+        }
+        
+        function init(){
+          if (wave && wave.isInWaveContainer()) {
+            wave.setStateCallback(function() {
+                game.onWaveStateChange() ;
+            });
+          }
+        }
+
+        gadgets.util.registerOnLoadHandler(init);
+
+      </script>
+
+      <div id="divSGF" style="visibility:hidden; position:absolute; border:solid 3px; left:10px; top:50px; height:280px; width:280px; overflow:hidden; background:lightgray">
+      <center>
+      <br>
+      Copy your SGF here:
+      <br>
+      <textarea id="txt" rows="10" cols="30"></textarea>
+      <br>
+      <button type=button onClick="readTA();">Process</button>
+      <button type=button onClick="cancel();">Cancel</button>
+      </center>
+      </div>
+      <script>
+      function readTA(){
+        game.importFromSGF( document.getElementById("txt").value );
+        document.getElementById('divSGF').style.visibility='hidden';
+      }
+      function cancel(){
+        document.getElementById('divSGF').style.visibility='hidden';
+      }
+      </script>
+
+     ]]>
+  </Content>
+</Module>
