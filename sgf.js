@@ -19,11 +19,11 @@ function SGFParser(str, game) {
 SGFParser.prototype.parse = function() {
     this.game._reset();
     if (!this._consumeWhiteSpaces()) {
-        MessageManager.getInstance().createDismissibleMessage("Unexpected end of file") ;
+        MessageManager.getInstance().createTimerMessage("Unexpected end of file",5) ;
         return;
     }
     if (this.str.charAt(0)!='('){
-        MessageManager.getInstance().createDismissibleMessage("Non-expected character: '"+this.str.charAt(0)+"'. Expected: '('");
+        MessageManager.getInstance().createTimerMessage("Non-expected character: '"+this.str.charAt(0)+"'. Expected: '('",5);
         return;
     }
     this.str = this.str.slice(1);
@@ -33,13 +33,13 @@ SGFParser.prototype.parse = function() {
             if (this.propertyValue.length==0) {
                 this.game.gameBoard.pass(1);
             } else if (this.propertyValue.length!=2) {
-                MessageManager.getInstance().createDismissibleMessage("Non-expected property-value: '"+this.propertyValue+"'.");
+                MessageManager.getInstance().createTimerMessage("Non-expected property-value: '"+this.propertyValue+"'.",5);
                 return;
             } else {
                 var i=this.propertyValue.charCodeAt(0)-97;
                 var j=this.propertyValue.charCodeAt(1)-97;
                 if (i>19 || j>19 || i<0 || j<0) {
-                    MessageManager.getInstance().createDismissibleMessage("Non-expected property-value: '"+this.propertyValue+"'.");
+                    MessageManager.getInstance().createTimerMessage("Non-expected property-value: '"+this.propertyValue+"'.",5);
                     return;
                 }
                 this.game.gameBoard.makeMove(i,j,1);
@@ -48,13 +48,13 @@ SGFParser.prototype.parse = function() {
             if (this.propertyValue.length==0) {
                 this.game.gameBoard.pass(2);
             } else if (this.propertyValue.length!=2) {
-                MessageManager.getInstance().createDismissibleMessage("Non-expected property-value: '"+this.propertyValue+"'.");
+                MessageManager.getInstance().createTimerMessage("Non-expected property-value: '"+this.propertyValue+"'.",5);
                 return;
             } else {
                 var i=this.propertyValue.charCodeAt(0)-97;
                 var j=this.propertyValue.charCodeAt(1)-97;
                 if (i>19 || j>19 || i<0 || j<0) {
-                    MessageManager.getInstance().createDismissibleMessage("Non-expected property-value: '"+this.propertyValue+"'.");
+                    MessageManager.getInstance().createTimerMessage("Non-expected property-value: '"+this.propertyValue+"'.",5);
                     return;
                 }
                 this.game.gameBoard.makeMove(i,j,2);

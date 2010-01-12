@@ -133,7 +133,7 @@ GameBoard.prototype.makeMove = function (i, j, color) {
         if (moveResult!=GameBoard.MOVE_ERROR_OCCUPIED) {
             this.undo(/*trimLog=*/true) ;
         }
-        MessageManager.getInstance().createDismissibleMessage("Wrong move. Error code: "+moveResult+".\n(1:Alr.Occ; 2:Suicide; 3:Ko)");
+        MessageManager.getInstance().createTimerMessage("Wrong move. Error code: "+moveResult+".\n(1:Alr.Occ; 2:Suicide; 3:Ko)", 5);
         return moveResult ;
     }
 
