@@ -2,13 +2,14 @@
 <theme>
   <name>Wooden Board</name>
   <board>
-    <size>19</size>
     <image>
-      <url>board.png</url>
       <leftOffset>15</leftOffset>
       <topOffset>15</topOffset>
       <verticalGap>23</verticalGap>
       <horizontalGap>23</horizontalGap>
+      <url size="19">board19.png</url>
+      <url size="13">board13.png</url>
+      <url size="9">board9.png</url>
     </image>
     <audioNotification type="boardChange">
       <audio type="audio/ogg" src="audio/boardChangeNotification.ogg"/>
@@ -28,5 +29,6 @@
     <url type="1-terr">black-terr_mc.png</url>
     <url type="2-terr">white-terr_mc.png</url>
     <url type="ko">ko_mc.png</url>
+    <url type="neutral">neutral_mc.png</url>
   </stone>
 </theme>

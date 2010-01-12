@@ -23,9 +23,18 @@ Game.STATE_WAVE_STATE_LOADED = 2 ;
 // ----- Class: Game -----------------------------------------------------------
 // ----- Public Methods --------------------------------------------------------
 
-Game.prototype.initiateChangeTheme = function (themeUrl) {
-    this.themeManager = new ThemeManager(this, themeUrl) ;
-    this.themeManager.loadTheme() ;
+Game.prototype.initiateChangeTheme = function (themeUrl, size) {
+    this.newSize = size;
+    if (!themeUrl && this.themeManager) themeUrl = this.themeManager.urlBase;
+
+    if (this.themeManager && this.themeManager.urlBase == this.themeManager.getUrlBase(themeUrl)) {
+        if (this.gameBoard && this.gameBoard.boardSize != size) {
+            this._onSizeChange(size);
+        }
+    } else {
+        this.themeManager = new ThemeManager(this, themeUrl) ;
+        this.themeManager.loadTheme() ;
+    }
 }
 
 Game.prototype.newSimpleGame = function() {
@@ -175,29 +184,25 @@ Game.prototype._reset = function () {
     this.gameBoard = new GameBoard(this.boardSize) ;
 }
 
-Game.prototype._initializeAppearance = function(boardImageUrl,
-                                               blackStoneImageUrl, whiteStoneImageUrl,
-                                               blackLastStoneImageUrl, whiteLastStoneImageUrl,
-                                               blackDeadStoneImageUrl, whiteDeadStoneImageUrl,
-                                               blackTerritoryImageUrl, whiteTerritoryImageUrl,
-                                               koImageUrl, boardSize, boardGeometry, stoneGeometry,
-                                               boardChangeAudioNotificationUrls) {
-//TODO: After separating boardsize & theme, the codes below might change
-    var result = 1;
-    if(this.boardSize && (this.boardSize != boardSize)) {
-        if (this.gameBoard) {
-            if (this.gameBoard.gameLog.log.length != 0) {
-                MessageManager.getInstance().createTimerMessage("Changing to a theme with different board-size is allowed only if there were no moves yet.", 5) ;
-                return 0;
-            } else {
-                result = 2;
-            }
-
-        }
+Game.prototype._onSizeChange = function(size) {
+    this._initGameBoard() ;
+    this._resetBoardUI() ;
+    if(this.state == (Game.STATE_THEME_LOADED | Game.STATE_WAVE_STATE_LOADED)) {
+        this._restoreStateFromWave( /*noAudio=*/ true);
+        this._setWaitAnimation(false);
+        this._renderBoard() ;
     }
+}
 
-    this.boardImageUrl = boardImageUrl ;
+Game.prototype._onThemeChange = function(themeUrl, boardImageUrls,
+                                         blackStoneImageUrl, whiteStoneImageUrl,
+                                         blackLastStoneImageUrl, whiteLastStoneImageUrl,
+                                         blackDeadStoneImageUrl, whiteDeadStoneImageUrl,
+                                         blackTerritoryImageUrl, whiteTerritoryImageUrl,
+                                         koImageUrl, neutralImageUrl, boardGeometry, stoneGeometry,
+                                         boardChangeAudioNotificationUrls) {
 
+    this.boardImageUrls         = boardImageUrls;
     this.blackStoneImageUrl     = blackStoneImageUrl ;
     this.whiteStoneImageUrl     = whiteStoneImageUrl ;
     this.blackLastStoneImageUrl = blackLastStoneImageUrl ;
@@ -207,9 +212,7 @@ Game.prototype._initializeAppearance = function(boardImageUrl,
     this.blackTerritoryImageUrl = blackTerritoryImageUrl ;
     this.whiteTerritoryImageUrl = whiteTerritoryImageUrl ;
     this.koImageUrl             = koImageUrl ;
-
-    this.boardSize = boardSize ;
-    this.gameBoard = new GameBoard(this.boardSize) ;
+    this.neutralImageUrl        = neutralImageUrl ;
     this.boardGeometry = boardGeometry ;
     this.stoneGeometry = stoneGeometry ;
 
@@ -217,48 +220,44 @@ Game.prototype._initializeAppearance = function(boardImageUrl,
         new AudioNotificationPlayer(boardChangeAudioNotificationUrls) ;
     this.boardChangedAudioNotificationPlayer.load() ;
 
-    this.state |= Game.STATE_THEME_LOADED  ;
-    return result;
-}
-
-Game.prototype._onThemeChange = function(themeUrl,
-                                        boardImageUrl,
-                                        blackStoneImageUrl, whiteStoneImageUrl,
-                                        blackLastStoneImageUrl, whiteLastStoneImageUrl,
-                                        blackDeadStoneImageUrl, whiteDeadStoneImageUrl,
-                                        blackTerritoryImageUrl, whiteTerritoryImageUrl,
-                                        koImageUrl, boardSize, boardGeometry, stoneGeometry,
-                                        boardChangeAudioNotificationUrls) {
-    var res = this._initializeAppearance(boardImageUrl,
-                              blackStoneImageUrl, whiteStoneImageUrl,
-                              blackLastStoneImageUrl, whiteLastStoneImageUrl,
-                              blackDeadStoneImageUrl, whiteDeadStoneImageUrl,
-                              blackTerritoryImageUrl, whiteTerritoryImageUrl,
-                              koImageUrl, boardSize, boardGeometry, stoneGeometry,
-                              boardChangeAudioNotificationUrls) ;
-//TODO: After separating boardsize & theme, the codes below might change
-    if (!res) return;
-
-    this._resetBoardUI() ;
-
     var themeUrlFromPref = prefs.getString('themeUrl') ;
     if(themeUrlFromPref != themeUrl) {
         prefs.set('themeUrl', themeUrl) ;
         MessageManager.getInstance().createTimerMessage("Default theme changed to "+themeUrl, 5) ;
     }
 
-//TODO: After separating boardsize & theme, the codes below might change
-    if (res==2) {
-        this._reset();
-        this._saveStateToWave() ;
+    this.state |= Game.STATE_THEME_LOADED  ;
+
+    this._onSizeChange();
+}
+
+Game.prototype._initGameBoard = function(){
+    if (!this.gameBoard) {
+        if (!this.newSize) {
+            this.boardSize = 19;
+        } else {
+            this.boardSize = this.newSize;
+        }
+        this.gameBoard = new GameBoard(this.boardSize);
+    }
+    this._restoreStateFromWave(/*noAudio=*/ true);
+    if (this.gameBoard) this.boardSize = this.gameBoard.boardSize;
+
+    if (this.newSize && this.boardSize != this.newSize) {
+        if (this.gameBoard.gameLog.log.length != 0) {
+            MessageManager.getInstance().createTimerMessage("Changing to a theme with different board-size is allowed only if there were no moves yet.", 5) ;
+        } else {
+            this.boardSize = this.newSize;
+            this.gameBoard = new GameBoard(this.boardSize);
+            this._saveStateToWave() ;
+        }
     }
 
-    if(this.state == (Game.STATE_THEME_LOADED | Game.STATE_WAVE_STATE_LOADED)) {
-        this._restoreStateFromWave();
-        this._setWaitAnimation(false);
-        this._renderBoard() ;
+    if (!this.newSize) {
+        this.newSize = this.gameBoard.boardSize;
     }
 }
+
 
 Game.prototype._onParticipantFilterChange = function(cancel) {
     this.participantController.setVisible(false) ;
@@ -275,6 +274,9 @@ Game.prototype._setParticipantFilter = function(participantFilter) {
 
 Game.prototype._resetBoardUI = function() {
     var i, j ;
+
+    //setting the right board-image
+    this.boardImageUrl = this.boardImageUrls[this.gameBoard.boardSize];
 
     // Remove stones, and old background...
     if(this.div) {
@@ -417,7 +419,7 @@ Game.prototype._setStone = function(i, j, color, last, ko) {
         } else if (color == GameBoardStone.COLOR_WHITE_TERRITORY) {
               src = this.whiteTerritoryImageUrl ;
         } else if (color == GameBoardStone.COLOR_NEUTRAL) {
-              src = this.koImageUrl ;
+              src = this.neutralImageUrl ;
         }
         visibility = "visible" ;
     } else {
@@ -476,20 +478,29 @@ Game.prototype._saveStateToWave = function() {
     return change;
 }
 
-Game.prototype._restoreStateFromWave = function() {
+Game.prototype._restoreStateFromWave = function(noAudio) {
     if(!wave) return ;
 
-    var gameBoard = wave.getState().get('gameBoard') ;
+    var waveState = wave.getState();
+    if (!waveState) return;
+
+    var gameBoard = waveState.get('gameBoard') ;
     if(gameBoard) {
         var s = new SimpleSerializer(this.gameBoard) ;
         var oldBoard = s.serialize() ;
+        var oldSize  = this.gameBoard.boardSize;
 
         var p = new SimpleParser(gameBoard) ;
         this.gameBoard = p.construct() ;
 
         if(oldBoard != gameBoard) {
-            // State really changed
-            this.boardChangedAudioNotificationPlayer.play() ;
+            if (oldSize != this.gameBoard.boardSize) {
+                this.boardSize = this.gameBoard.boardSize;
+                this._resetBoardUI() ; //Somebody else changed the game-size (possilbe only when the game begins); TODO: What if theme also changed???
+            }
+            if (!noAudio) {
+                this.boardChangedAudioNotificationPlayer.play() ;
+            }
         }
     }
 

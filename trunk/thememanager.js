@@ -44,17 +44,20 @@ AudioNotificationPlayer.prototype.play = function() {
 
 function ThemeManager(game, url) {
     this.game = game ;
-    url = url.replace(/^\s+|\s+$/g, '') ;
-    this.url = url ;
-    
-    this.urlBase = url ;
-    if(this.urlBase.length>0) {
-        if(this.urlBase.charAt(url.length-1) != '/') {
-            this.urlBase += '/' ;
+    this.urlBase = this.getUrlBase(url);
+    this.game.themeManager = this;
+}
+
+ThemeManager.prototype.getUrlBase = function(url) {
+    var urlBase = url.replace(/^\s+|\s+$/g, '') ;
+    if(urlBase.length>0) {
+        if(urlBase.charAt(url.length-1) != '/') {
+            urlBase += '/' ;
         }
     }
-
+    return urlBase;
 }
+
 
 ThemeManager.prototype.loadTheme = function() {
     // alert("ThemeManager.loadTheme") ;
@@ -74,15 +77,15 @@ ThemeManager.prototype.loadTheme = function() {
 
 ThemeManager.prototype.onThemeUrlFetched = function(obj) {
     if(obj.errors && obj.errors.length && obj.errors.length>0) {
-        MessageManager.getInstance().createDismissibleMessage("Fetching a theme from URL "+this.url+" failed.") ;
+        MessageManager.getInstance().createTimerMessage("Fetching a theme from URL "+this.urlBase+" failed.",5) ;
         return ;
     }
 
     this.boardGeometry          = null ;
-    this.boardSize              = null ;
     this.stoneGeometry          = null ;
 
-    this.boardImageUrl          = this.urlBase ;
+    this.boardImageUrls         = [];
+
     this.blackStoneImageUrl     = this.urlBase ;
     this.whiteStoneImageUrl     = this.urlBase ;
 
@@ -93,7 +96,8 @@ ThemeManager.prototype.onThemeUrlFetched = function(obj) {
     this.blackTerritoryImageUrl = this.urlBase ;
     this.whiteTerritoryImageUrl = this.urlBase ;
     this.koImageUrl             = this.urlBase ;
-    
+    this.neutralImageUrl        = this.urlBase ;
+
     this.boardChangedAudioNotificationUrls = [] ;
     //  audio/wav, audio/x-wav, audio/wave, audio/x-pn-wav
 
@@ -114,8 +118,15 @@ ThemeManager.prototype.onThemeUrlFetched = function(obj) {
         }
     }
 
-    this.game._onThemeChange(this.url,
-                             this.boardImageUrl,
+    if (!this.boardImageUrls[9] ||
+        !this.boardImageUrls[13] ||
+        !this.boardImageUrls[19]) {
+        MessageManager.getInstance().createTimerMessage("Error in theme: it should have boardimages for all the three standard boardsize.", 5) ;
+        return;
+    }
+
+    this.game._onThemeChange(this.urlBase,
+                             this.boardImageUrls,
                              this.blackStoneImageUrl,
                              this.whiteStoneImageUrl,
                              this.blackLastStoneImageUrl,
@@ -125,7 +136,7 @@ ThemeManager.prototype.onThemeUrlFetched = function(obj) {
                              this.blackTerritoryImageUrl,
                              this.whiteTerritoryImageUrl,
                              this.koImageUrl,
-                             this.boardSize,
+                             this.neutralImageUrl,
                              this.boardGeometry,
                              this.stoneGeometry,
                              this.boardChangedAudioNotificationUrls) ;
@@ -136,9 +147,7 @@ ThemeManager.prototype.processBoardItem = function(board) {
     for(var i=0; i<board.childNodes.length; i++) {
         var item = board.childNodes.item(i) ;
 
-        if(item.nodeName=="size") {
-            this.boardSize = parseInt(item.firstChild.nodeValue) ;
-        } else if(item.nodeName=="image") {
+        if(item.nodeName=="image") {
             this.processBoardImageItem(item) ;
         } else if(item.nodeName=="audioNotification") {
             this.processBoardAudioNotificationItem(item) ;
@@ -155,7 +164,10 @@ ThemeManager.prototype.processBoardImageItem = function(image) {
     for(var i=0; i<image.childNodes.length; i++) {
         var item = image.childNodes.item(i) ;
         if(item.nodeName == "url") {
-            this.boardImageUrl += item.firstChild.nodeValue ;
+            var size = parseInt(item.getAttribute("size")) ;
+            if (size>=2 && size<=36) {
+                this.boardImageUrls[size] = this.urlBase + item.firstChild.nodeValue;
+            }
         }
         else if(item.nodeName == "leftOffset") {
             lo = parseInt(item.firstChild.nodeValue) ;        
@@ -231,6 +243,9 @@ ThemeManager.prototype.processStoneItem = function(stone) {
             else if(typeAttribute=="ko") {
                 this.koImageUrl += item.firstChild.nodeValue ;
             }
+            else if(typeAttribute=="neutral") {
+                this.neutralImageUrl += item.firstChild.nodeValue ;
+            }
         }
     }
     
@@ -246,8 +261,12 @@ function DummyThemeManager(game, url) {
     var boardChangedAudioNotification = [] ;
     boardChangedAudioNotification.push({type: "audio/ogg", file:prefix+"boardChange.ogg"}) ;
     boardChangedAudioNotification.push({type: "audio/mp3", file:prefix+"boardChange.mp3"}) ;
+    var boardImages = [];
+    boardImages[9] = prefix+"board9.png";
+    boardImages[13] = prefix+"board13.png";
+    boardImages[19] = prefix+"board19.png";
     game._onThemeChange(prefix,
-                        prefix+"board.png",
+                        boardImages,
                         prefix+"black.png",
                         prefix+"white.png",
                         prefix+"black-last.png",
@@ -257,7 +276,7 @@ function DummyThemeManager(game, url) {
                         prefix+"black-terr.png",
                         prefix+"white-terr.png",
                         prefix+"ko.png",
-                        19,
+                        prefix+"neutral.png",
                         new GameBoardGeometry(20, 32, 20, 32),
                         new GameStoneGeometry(24, 24),
                         boardChangedAudioNotification) ;

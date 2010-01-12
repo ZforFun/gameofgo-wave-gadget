@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Module>
-  <ModulePrefs title="Game of Go Gadget" scrolling="true"> 
+  <ModulePrefs title="Game of Go Gadget" scrolling="true">
     <Require feature="setprefs" />
 <!--
     <Require feature="views" />
@@ -11,20 +11,21 @@
   </ModulePrefs>
   <UserPref name="themeUrl"
             display_name="Theme Url"
-            default_value="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/themes/wooden-theme/"/>
+            default_value="http://bartmate.homeip.net/googlewave/GameOfGo/themes/wooden-theme/"/>
 <!--
   <Content type="html" view="canvas,home">
 -->
   <Content type="html">
     <![CDATA[
-      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/game.js"></script>
-      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/board.js"></script>
-      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/log.js"></script>
-      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/thememanager.js"></script>
-      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/utils.js"></script>
-      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/participant.js"></script>
-      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/logview.js"></script>
-      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/sgf.js"></script>
+      <script type="text/javascript" src="http://bartmate.homeip.net/googlewave/GameOfGo/utils.js"></script>
+      <script type="text/javascript" src="http://bartmate.homeip.net/googlewave/GameOfGo/game.js"></script>
+      <script type="text/javascript" src="http://bartmate.homeip.net/googlewave/GameOfGo/board.js"></script>
+      <script type="text/javascript" src="http://bartmate.homeip.net/googlewave/GameOfGo/log.js"></script>
+      <script type="text/javascript" src="http://bartmate.homeip.net/googlewave/GameOfGo/thememanager.js"></script>
+      <script type="text/javascript" src="http://bartmate.homeip.net/googlewave/GameOfGo/participant.js"></script>
+      <script type="text/javascript" src="http://bartmate.homeip.net/googlewave/GameOfGo/logview.js"></script>
+      <script type="text/javascript" src="http://bartmate.homeip.net/googlewave/GameOfGo/sgf.js"></script>
+
       <div id="main_div" style="position:relative">
         <table>
           <tr>
@@ -45,7 +46,8 @@
         </table>
         <table>
           <tr>
-            <td><input type="text" id="themeUrl"/></td>
+            <td>URL:<input type="text" id="themeUrl"/></td>
+            <td>Size(9,13,19):<input type="text" id="size"/></td>
             <td><a href="" onclick="changeTheme();return false;">Change</a></td>
           </tr>
         </table>
@@ -57,32 +59,27 @@
         </table>
         <div id="board_div" style="position:relative"/>
       </div>
+
       <script type="text/javascript">
         var prefs = new gadgets.Prefs();
         var themeUrl = prefs.getString('themeUrl') ;
         var game = new Game(document.getElementById("board_div"), themeUrl) ;
-        var myModuleId = __MODULE_ID__ ;
-        
-        if(!themeUrl) {
-          themeUrl = "http://gameofgo-wave-gadget.googlecode.com/svn/trunk/themes/basic-theme/" ;
-        }
         var themeManager = new ThemeManager(game, themeUrl) ;
-        themeManager.loadTheme() ;
+        var myModuleId = __MODULE_ID__ ;
+
         function changeTheme() {
            var themeUrl = document.getElementById('themeUrl').value ;
-           game.initiateChangeTheme(themeUrl) ;
-        }
-        
-        function init(){
-          if (wave && wave.isInWaveContainer()) {
-            wave.setStateCallback(function() {
-                game.onWaveStateChange() ;
-            });
-          }
+           var size = parseInt( document.getElementById('size').value );
+           game.initiateChangeTheme(themeUrl,size) ;
         }
 
-        gadgets.util.registerOnLoadHandler(init);
-
+      function readTA(){
+        game.importFromSGF( document.getElementById("txt").value );
+        document.getElementById('divSGF').style.visibility='hidden';
+      }
+      function cancel(){
+        document.getElementById('divSGF').style.visibility='hidden';
+      }
       </script>
 
       <div id="divSGF" style="visibility:hidden; position:absolute; border:solid 3px; left:10px; top:50px; height:280px; width:280px; overflow:hidden; background:lightgray">
@@ -96,15 +93,18 @@
       <button type=button onClick="cancel();">Cancel</button>
       </center>
       </div>
-      <script>
-      function readTA(){
-        game.importFromSGF( document.getElementById("txt").value );
-        document.getElementById('divSGF').style.visibility='hidden';
-      }
-      function cancel(){
-        document.getElementById('divSGF').style.visibility='hidden';
-      }
+
+      <script type="text/javascript">
+
+        function init(){
+          if (wave && wave.isInWaveContainer()) {
+            wave.setStateCallback( function() { game.onWaveStateChange(); } );
+            themeManager.loadTheme() ;
+          }
+        }
+        gadgets.util.registerOnLoadHandler(init);
       </script>
+
 
      ]]>
   </Content>

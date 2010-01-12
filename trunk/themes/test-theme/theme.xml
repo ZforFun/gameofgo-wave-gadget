@@ -2,13 +2,14 @@
 <theme>
   <name>Simple Board</name>
   <board>
-    <size>19</size>
     <image>
-      <url>board.png</url>
       <leftOffset>20</leftOffset>
       <topOffset>20</topOffset>
       <verticalGap>32</verticalGap>
       <horizontalGap>32</horizontalGap>
+      <url size="19">board19.png</url>
+      <url size="13">board13.png</url>
+      <url size="9">board9.png</url>
     </image>
     <audioNotification type="boardChange">
       <audio type="audio/ogg" src="audio/boardChangeNotification.ogg"/>
@@ -28,5 +29,6 @@
     <url type="1-terr">black-terr.png</url>
     <url type="2-terr">white-terr.png</url>
     <url type="ko">ko.png</url>
+    <url type="neutral">neutral.png</url>
   </stone>
 </theme>
