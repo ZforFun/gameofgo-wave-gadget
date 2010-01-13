@@ -1,0 +1,44 @@
+<html>
+<script type="text/javascript" src="js.js"></script>
+<body>
+       <div id="main_div" style="position:relative"> 
+         <table>
+           <tr id="settings">
+             <td><a href="" onclick="game.gotoFirstStep();return false;">First</a></td>
+             <td><a href="" onclick="game.undo();return false;">Undo</a></td>
+             <td><a href="" onclick="game.redo();return false;">Redo</a></td>
+             <td><a href="" onclick="game.gotoLastStep();return false;">Last</a></td>
+             <td><a href="" onclick="game.pass();return false;">Pass</a></td>
+             <td><a href="" onclick="alert( game.exportToSGF() ); return false;">Export to SGF</a></td>
+             <td><a href="" onclick="document.getElementById('divSGF').style.visibility='visible';return false;">Import from SGF</a></td>
+           </tr>
+         </table>
+       </div>
+    <div id="board_div" style="position:relative"/>
+<script>
+var game = new Game(document.getElementById("board_div")) ;
+DummyThemeManager(game) ;
+</script>
+
+<div id="divSGF" style="visibility:hidden; position:absolute; border:solid 3px; left:10px; top:50px; height:280px; width:280px; overflow:hidden; background:lightgray">
+<br><center>
+Copy your SGF here:
+<br>
+<textarea id="txt" rows="10" cols="30"></textarea>
+<br>
+<button type=button onClick="readTA();">Process</button>
+<button type=button onClick="cancel();">Cancel</button>
+</center>
+</div>
+<script>
+function readTA(){
+  game.importFromSGF( document.getElementById("txt").value );
+  document.getElementById('divSGF').style.visibility='hidden';
+}
+function cancel(){
+  document.getElementById('divSGF').style.visibility='hidden';
+}
+</script>
+
+</body>
+</html>
