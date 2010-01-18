@@ -247,7 +247,7 @@
   </script>
   
           function init(){
-            gadgets.window.adjustHeight( 1000 );
+            gadgets.window.adjustHeight( "1000px" );
           }
           
           gadgets.util.registerOnLoadHandler(init);
