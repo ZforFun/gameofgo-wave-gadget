@@ -26,85 +26,231 @@
       <script type="text/javascript" src="http://bartmate.homeip.net/googlewave/GameOfGo/logview.js"></script>
       <script type="text/javascript" src="http://bartmate.homeip.net/googlewave/GameOfGo/sgf.js"></script>
 
-      <div id="main_div" style="position:relative">
-        <table>
-          <tr>
-            <td><a href="" onclick="game.newSimpleGame();return false;"><b>New Game (alternating players)</b></a></td>
-            <td><a href="" onclick="game.newAllPlayersCanPlayGame();return false;"><b>New Game (all players move)</b></a></td>
-            <td><a href="" onclick="game.openParticipantFilterUI();return false;">Players</a></td>
-          </tr>
+  <script language="JavaScript" type="text/javascript">
+//<![CDATA[
+         function show_screen ( screenid )
+         {
+         var screens=document.getElementsByName("GadgetScreen");
+         for (var i=0; i<screens.length; i++)
+         {
+         screens[i].style.visibility="hidden";
+         }
+         document.getElementById( screenid ).style.visibility="visible";
+         }
+  //]]>
+  </script>
+</head>
+
+<body>
+   <style type="text/css">
+/*<![CDATA[*/
+  @import url("gogadget.css"); 
+  /*]]>*/
+  </style>
+  <div id="container">
+
+    <!-- Temporary screen selector -->
+    <div style="position:absolute;top:-50;left:300;">
+      Temp screen selector <a href="javascript:show_screen('scrGameMode')">screen1</a>
+      <a href="javascript:show_screen('scrNormalGame')">screen2</a> <a href=
+      "javascript:show_screen('screen3')">screen3</a>
+    </div>
+    
+    <!-- The main_div holds the complete gadget -->
+    <div id="main_div" style="position:relative; overflow:hidden; height:425px;">
+      <!-- Inside the main_div, each screen of the gadget is separated in its own div. The divs for the screens must have the name "GadgetScreen" -->
+      <!-- Screen to select the game mode -->
+
+      <div id="scrGameMode" name="GadgetScreen">
+        <p>Choose game mode</p>
+
+        <table id="gamemode_table">
+          <tbody>
+            <tr>
+              <td style="padding:1em;"><img alt="Play against an opponent" src="mode_normal.jpg" /></td>
+
+              <td style="padding:1em;"><a href="javascript:show_screen('scrNormalGame')"
+              class="mainchoice">Play against opponent</a>19*19, <span name=
+              "player_black">Mate</span> plays black. <a href="ui_model_03.html">Game
+              info</a></td>
+
+              <td style="padding:1em;"><a href="ui_model_04.html">Select other
+              players</a> or<br />
+              <a href="ui_model_05.html">Customize board</a></td>
+            </tr>
+
+            <tr>
+              <td style="padding:1em;"><img alt="Upload and solve a problem" src="mode_problem.jpg" /></td>
+
+              <td style="padding:1em;"><a href="ui_model_06.html" class=
+              "mainchoice">Solve problem</a>You can load a go problem from an SGF file
+              and solve it.</td>
+
+              <td style="padding:1em;"><a href="ui_model_05.html">Customize
+              board</a></td>
+            </tr>
+
+            <tr>
+              <td style="padding:1em;"><img alt="Place stones and analyze games" src="mode_freeboard.jpg" /></td>
+
+              <td style="padding:1em;"><a href="ui_model_07.html" class="mainchoice">Free
+              board setup</a>You can freely place stones or analyze a game in this
+              mode.</td>
+
+              <td style="padding:1em;"><a href="ui_model_05.html">Customize
+              board</a></td>
+            </tr>
+          </tbody>
         </table>
-        <table>
-          <tr>
-            <td><a href="" onclick="game.gotoFirstStep();return false;">First</a></td>
-            <td><a href="" onclick="game.undo();return false;">Undo</a></td>
-            <td><a href="" onclick="game.redo();return false;">Redo</a></td>
-            <td><a href="" onclick="game.gotoLastStep();return false;">Last</a></td>
-            <td><a href="" onclick="game.pass();return false;">Pass</a></td>
-            <td><a href="" onclick="game.result();return false;">Result</a></td>
-          </tr>
-        </table>
-        <table>
-          <tr>
-            <td>URL:<input type="text" id="themeUrl"/></td>
-            <td>Size(9,13,19):<input type="text" id="size"/></td>
-            <td><a href="" onclick="changeTheme();return false;">Change</a></td>
-          </tr>
-        </table>
-        <table>
-          <tr>
-            <td><a href="" onclick="alert( game.exportToSGF() ); return false;">Export to SGF</a></td>
-            <td><a href="" onclick="document.getElementById('divSGF').style.visibility='visible';return false;">Import from SGF</a></td>
-          </tr>
-        </table>
-        <div id="board_div" style="position:relative"/>
-      </div>
+      </div><!-- Screen play against opponent -->
 
-      <script type="text/javascript">
-        var prefs = new gadgets.Prefs();
-        var themeUrl = prefs.getString('themeUrl') ;
-        var game = new Game(document.getElementById("board_div"), themeUrl) ;
-        var themeManager = new ThemeManager(game, themeUrl) ;
-        var myModuleId = __MODULE_ID__ ;
+      <div id="scrNormalGame" name="GadgetScreen">
+        <div id="board_div" style="float:left" title=
+        "This is the container of the goban"><img alt="Goban" src="board19.png" /></div>
 
-        function changeTheme() {
-           var themeUrl = document.getElementById('themeUrl').value ;
-           var size = parseInt( document.getElementById('size').value );
-           game.initiateChangeTheme(themeUrl,size) ;
-        }
+        <div id="toolbar_div" style="position:absolute; left:450px; height:444px;">
+          <div id="toolbox_game_div" class="toolbox">
+            <div class="toolbox_hdr">
+              Game
+            </div>
 
-      function readTA(){
-        game.importFromSGF( document.getElementById("txt").value );
-        document.getElementById('divSGF').style.visibility='hidden';
-      }
-      function cancel(){
-        document.getElementById('divSGF').style.visibility='hidden';
-      }
-      </script>
+            <div class="toolbox_body">
+              <table style="width:100%;">
+                <tbody>
+                  <tr>
+                    <td><img alt="Black player" style="position:relative; left:20px;"
+                    src="black_mc.png" /> <img alt="Black player" style=
+                    "position:relative; top:10px;" src="black_mc.png" /></td>
 
-      <div id="divSGF" style="visibility:hidden; position:absolute; border:solid 3px; left:10px; top:50px; height:280px; width:280px; overflow:hidden; background:lightgray">
-      <center>
-      <br>
-      Copy your SGF here:
-      <br>
-      <textarea id="txt" rows="10" cols="30"></textarea>
-      <br>
-      <button type=button onClick="readTA();">Process</button>
-      <button type=button onClick="cancel();">Cancel</button>
-      </center>
-      </div>
+                    <td><img alt="Black player" id="avatar_black" src=
+                    "avatar_blk.jpg" /></td>
 
-      <script type="text/javascript">
+                    <td><img alt="White player" style="position:relative; left:20px;"
+                    src="white_mc.png" /> <img alt="White player" style=
+                    "position:relative; top:10px;" src="white_mc.png" /></td>
 
-        function init(){
-          if (wave && wave.isInWaveContainer()) {
-            wave.setStateCallback( function() { game.onWaveStateChange(); } );
-            themeManager.loadTheme() ;
-          }
-        }
-        gadgets.util.registerOnLoadHandler(init);
-      </script>
+                    <td><img alt="White player" id="avatar_white" src=
+                    "avatar_wht.jpg" /></td>
+                  </tr>
 
+                  <tr>
+                    <td style="text-align:right">-&gt;</td>
+
+                    <td id="player_black">Mate</td>
+
+                    <td></td>
+
+                    <td id="player_white">Zoltan</td>
+                  </tr>
+
+                  <tr>
+                    <td>Time</td>
+
+                    <td id="time_black">08:12</td>
+
+                    <td></td>
+
+                    <td id="time_black">07:51</td>
+                  </tr>
+
+                  <tr>
+                    <td>Prisoner</td>
+
+                    <td id="prisoner_black">0</td>
+
+                    <td></td>
+
+                    <td id="prisoner_black">3</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div id="messagebox">
+                Move not allowed: ko
+              </div>
+
+              <form style="padding:0.5em; margin:0">
+                <button>Pass</button><button style="float:right;">Undo</button>
+              </form>
+            </div>
+          </div>
+
+          <div id="toolbox_comment_div" class="toolbox">
+            <div class="toolbox_hdr">
+              Comments
+            </div>
+
+            <div class="toolbox_body">
+              <div style="overflow: auto;height: 110px;">
+                <table style="width:200px;" cellspacing="0">
+                  <col style="width:30px;" />
+                  <col style="width:20px;" />
+                  <col />
+
+                  <tbody>
+                    <tr>
+                      <td><a href="javascript:moveto(22)">22</a></td>
+
+                      <td><img alt="White's move no. 22" src="white_mc.png" style="width:20px;height:20px;" /></td>
+
+                      <td>Atari</td>
+                    </tr>
+
+                    <tr>
+                      <td><a href="javascript:moveto(22)">23</a></td>
+
+                      <td><img alt="Black's move no. 23" src="black_mc.png" style="width:20px;height:20px;" /></td>
+
+                      <td>Mate: this was killer<br />
+                      Zoltan: you still have good chance</td>
+                    </tr>
+
+                    <tr>
+                      <td><a href="javascript:moveto(22)">24</a></td>
+
+                      <td><img alt="White's move no. 24 " src="white_mc.png" style="width:20px;height:20px;" /></td>
+
+                      <td></td>
+                    </tr>
+
+                    <tr>
+                      <td><a href="javascript:moveto(22)">25</a></td>
+
+                      <td><img alt="Black's move no. 25" src="black_mc.png" style="width:20px;height:20px;" /></td>
+
+                      <td></td>
+                    </tr>
+
+                    <tr>
+                      <td><a href="javascript:moveto(22)">26</a></td>
+
+                      <td><img alt="White's move no. 26" src="white_mc.png" style="width:20px;height:20px;" /></td>
+
+                      <td>Zoltan: left after right</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <form style="padding:0.5em; margin:0">
+                <input style="width:100%;" />
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div style="clear:both;"></div>
+      </div><!-- Screen to select players -->
+
+      <div id="scrPlayers" name="GadgetScreen"></div><!-- Screen to set up board -->
+
+      <div id="scrBoardSetup" name="GadgetScreen"></div>
+    </div>
+  </div><script language="JavaScript" type="text/javascript">
+//<![CDATA[
+  show_screen ( "scrGameMode" );
+  //]]>
+  </script>
 
      ]]>
   </Content>
