@@ -99,7 +99,7 @@
 
       <div id="scrNormalGame" name="GadgetScreen">
         <div id="board_div" style="float:left" title=
-        "This is the container of the goban"><img alt="Goban" src="board19.png" /></div>
+        "This is the container of the goban"><img alt="Goban" src="http://gameofgo-wave-gadget.googlecode.com/svn/branches/branch_UI/themes/wooden-theme/board19.png" /></div>
 
         <div id="toolbar_div" style="position:absolute; left:450px; height:444px;">
           <div id="toolbox_game_div" class="toolbox">
