@@ -243,8 +243,7 @@
   
 <!-- Show initial screen and hide all others -->
   <script language="JavaScript" type="text/javascript">
-  show_screen ( "scrGameMode" );
-  </script>
+
   
           function init(){
             gadgets.window.adjustHeight(  );
@@ -252,6 +251,9 @@
           
           gadgets.util.registerOnLoadHandler(init);
 
+    show_screen ( "scrGameMode" );
+
+  </script>
      ]]>
   </Content>
 </Module>
