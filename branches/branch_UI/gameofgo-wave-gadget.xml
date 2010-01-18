@@ -25,9 +25,8 @@
       <script type="text/javascript" src="http://bartmate.homeip.net/googlewave/GameOfGo/participant.js"></script>
       <script type="text/javascript" src="http://bartmate.homeip.net/googlewave/GameOfGo/logview.js"></script>
       <script type="text/javascript" src="http://bartmate.homeip.net/googlewave/GameOfGo/sgf.js"></script>
-
+<!-- Temporary script to show/hid screens -->
   <script language="JavaScript" type="text/javascript">
-//<![CDATA[
          function show_screen ( screenid )
          {
          var screens=document.getElementsByName("GadgetScreen");
@@ -37,23 +36,17 @@
          }
          document.getElementById( screenid ).style.visibility="visible";
          }
-  //]]>
   </script>
-</head>
-
-<body>
    <style type="text/css">
-/*<![CDATA[*/
   @import url("gogadget.css"); 
-  /*]]>*/
   </style>
+  
   <div id="container">
 
     <!-- Temporary screen selector -->
     <div style="position:absolute;top:-50;left:300;">
       Temp screen selector <a href="javascript:show_screen('scrGameMode')">screen1</a>
-      <a href="javascript:show_screen('scrNormalGame')">screen2</a> <a href=
-      "javascript:show_screen('screen3')">screen3</a>
+      <a href="javascript:show_screen('scrNormalGame')">screen2</a>
     </div>
     
     <!-- The main_div holds the complete gadget -->
@@ -246,12 +239,11 @@
 
       <div id="scrBoardSetup" name="GadgetScreen"></div>
     </div>
-  </div><script language="JavaScript" type="text/javascript">
-//<![CDATA[
+  </div>
+  
+  <script language="JavaScript" type="text/javascript">
   show_screen ( "scrGameMode" );
-  //]]>
   </script>
-
      ]]>
   </Content>
 </Module>
