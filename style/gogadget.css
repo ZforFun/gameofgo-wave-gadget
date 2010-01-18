@@ -1,0 +1,52 @@
+body, td
+{
+font-family: Tahoma, Arial, helvetica, sans-serif;
+font-size:12px;
+color:#888;
+}
+
+a
+{color:#248;}
+
+a.mainchoice
+{display:block;
+margin-right:2em;
+font-size:1.8em;
+font-weight:bold;}
+
+td
+{vertical-align:top;}
+
+.toolbox
+{
+margin:1em;
+margin-top:0;
+width:250px;
+}
+
+.toolbox_hdr
+{padding:0.5em;
+background:url(toolbox_hdr.png);
+background-repeat:no-repeat;
+color:white;
+}
+
+.toolbox_body
+{border: 1px solid #ccc;
+padding:0.5em;
+padding-bottom:0}
+
+button
+{width:100px; background:#69e; padding:0.5em; margin:0; color:white;}
+
+#avatar_black, #avatar_white
+{width:48px; height:48px; border:1px solid #ccc;}
+
+#messagebox
+{background:#ffc; color:#a44; padding:0.2em;}
+
+/* Styling the gadget screen. This is done with an attribute selector: all elements with the name GadgetScreen are relevant. */
+[name=GadgetScreen]
+{position:absolute;
+top:0;
+left:0;}
