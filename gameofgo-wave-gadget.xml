@@ -11,20 +11,20 @@
   </ModulePrefs>
   <UserPref name="themeUrl"
             display_name="Theme Url"
-            default_value="http://bartmate.homeip.net/googlewave/GameOfGo/themes/wooden-theme/"/>
+            default_value="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/themes/wooden-theme/"/>
 <!--
   <Content type="html" view="canvas,home">
 -->
   <Content type="html">
     <![CDATA[
-      <script type="text/javascript" src="http://bartmate.homeip.net/googlewave/GameOfGo/utils.js"></script>
-      <script type="text/javascript" src="http://bartmate.homeip.net/googlewave/GameOfGo/game.js"></script>
-      <script type="text/javascript" src="http://bartmate.homeip.net/googlewave/GameOfGo/board.js"></script>
-      <script type="text/javascript" src="http://bartmate.homeip.net/googlewave/GameOfGo/log.js"></script>
-      <script type="text/javascript" src="http://bartmate.homeip.net/googlewave/GameOfGo/thememanager.js"></script>
-      <script type="text/javascript" src="http://bartmate.homeip.net/googlewave/GameOfGo/participant.js"></script>
-      <script type="text/javascript" src="http://bartmate.homeip.net/googlewave/GameOfGo/logview.js"></script>
-      <script type="text/javascript" src="http://bartmate.homeip.net/googlewave/GameOfGo/sgf.js"></script>
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/utils.js"></script>
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/game.js"></script>
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/board.js"></script>
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/log.js"></script>
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/thememanager.js"></script>
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/participant.js"></script>
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/logview.js"></script>
+      <script type="text/javascript" src="http://gameofgo-wave-gadget.googlecode.com/svn/trunk/sgf.js"></script>
 
       <div id="main_div" style="position:relative">
         <table>
