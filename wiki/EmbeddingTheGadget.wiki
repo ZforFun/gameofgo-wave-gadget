@@ -2,15 +2,15 @@
 #labels Phase-Deploy
 
 
-* Go to the blip (those selectable parts of a wave) into which you want to add the go-gadget
-* Go to edit mode (e.g. with control-e)
-* Press the "puzzle-piece" toolbutton (its tooltip is "Add Gadget by URL")
-* Write the following URL into the input field appearing: http://gameofgo-wave-gadget.googlecode.com/svn/trunk/gameofgo-wave-gadget.xml
-* Enjoy it ;-)
+ * Go to the blip (those selectable parts of a wave) into which you want to add the go-gadget
+ * Go to edit mode (e.g. with control-e)
+ * Press the "puzzle-piece" toolbutton (its tooltip is "Add Gadget by URL")
+ * Write the following URL into the input field appearing: http://gameofgo-wave-gadget.googlecode.com/svn/trunk/gameofgo-wave-gadget.xml
+ * Enjoy it ;-)
 
 The given URL is the trunk-version, so it is the most stable gadget-version.
 
-Important remark, save your position often, because we are developing the stuff and so sometimes we overwrite the trunk-version with a newer one, which may not be compatible with the old one. You can use the "Export to SGF" link, and you can copy the content of the popup window appeared.
+Important remark!: save your position often, because we are developing the stuff and so sometimes we overwrite the trunk-version with a newer one, which may not be compatible with the old one. You can use the "Export to SGF" link, and you can copy the content of the popup window appeared.
 
 Regards,
 
