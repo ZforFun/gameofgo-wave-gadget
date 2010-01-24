@@ -1,5 +1,5 @@
 #summary How to add the go-gadget to a wave
-#labels Phase-Deploy
+#labels Phase-Deploy,Featured
 
 
  * Go to the blip (those selectable parts of a wave) into which you want to add the go-gadget
