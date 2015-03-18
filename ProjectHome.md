@@ -1,0 +1,1 @@
+You can play and analyze the game of go (baduk) with this Googe Wave Gadget
